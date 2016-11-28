@@ -1,4 +1,3 @@
-- write the documentation
 - error: when searching, the changes are being ignored
 - feature: correlation
 - feature: snapshot

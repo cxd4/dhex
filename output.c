@@ -419,7 +419,7 @@ void printmainmenu(tOutput* output,tBool diffmode)
 "Quit  "};	// F10
 
 	unsigned char* menutextsdiff[]={
-"Goto  ",	// F1
+"      ",	// F1
 "      ",	// F2
 "Next  ",	// F3
 "Prev  ",	// F4

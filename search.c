@@ -24,6 +24,7 @@ tInt8	searchfor(tSearch* search,tBuffer* buf,tUInt64* cursorpos,tBool nextnotpre
 	tInt32	idx;
 	tBool	increment;
 	tUInt64	searched=0;
+	int i;
 
 
 	forward=(search->forwardnotbackward==nextnotprev);
@@ -44,6 +45,17 @@ tInt8	searchfor(tSearch* search,tBuffer* buf,tUInt64* cursorpos,tBool nextnotpre
 		fwlog=fopen(search->writelogfilename,"wb");
 	
 		if (fwlog==NULL) done=1;
+		else {
+			fprintf(fwlog,"#DHEX SEARCHLOG\n");
+			fprintf(fwlog,"#VERSION 0\n");
+			fprintf(fwlog,"#Search was for");
+			for (i=0;i<search->searchlen;i++)
+			{
+				fprintf(fwlog," %02x",((unsigned int)search->searchstring[i])&0xff);
+			}		
+			fprintf(fwlog,"\n");
+			fprintf(fwlog,"#lines are all in hex\n");
+		}
 	}
 	increment=!search->writesearchlog;
 	while (!done && buf->bufsize)
@@ -65,13 +77,17 @@ tInt8	searchfor(tSearch* search,tBuffer* buf,tUInt64* cursorpos,tBool nextnotpre
 						// state 2: read until the end of the line
 			tUInt64	x=0;
 			tBool	havenum;
+			tInt64	firstsearchlogpos;
 
+			firstsearchlogpos=search->lastsearchlogpos;
+			
 			setfilepos(frlog,search->lastsearchlogpos);
 			havenum=0;
 			while (!done && !havenum)
 			{
 				c=32;
 				x=0;
+				state=0;
 				while (c>=32 && !done)
 				{
 					fread(&c,sizeof(char),1,frlog);

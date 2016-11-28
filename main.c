@@ -1,6 +1,6 @@
 #define	MAJORVERSION	0
 #define	MINORVERSION	6
-#define	REVISION	2
+#define	REVISION	3
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -59,7 +59,8 @@ void helpscreen(char* argv0,int exitval)
 	fprintf(stderr," -od, -OD [x]                 set the cursor to [x] (decimal)\n");
 	fprintf(stderr," -oh, -OH [x]                 set the cursor to [x] (hexadecimal)\n");
 	fprintf(stderr," -oo, -OO [x]                 set the cursor to [x] (octal)\n");
-	//fprintf(stderr," -s, -S [x]                 find the hexvalue x in file (TODO)\n");
+	fprintf(stderr," -sa, -SA, -sab, -SAB [x]     find the ascii string x in file (b=backwards)\n");
+	fprintf(stderr," -sh, -SH, -shb, -SHB [x]     find the hex string x in file (b=backwards)\n");
 	//fprintf(stderr," -r, -R [read searchlog]    read the search positions from this searchlog (TODO)\n");
 	//fprintf(stderr," -w, -W [write searchlog]   write the location of the occurances to this log (TODO)\n");
 	fprintf(stderr,"\n");
@@ -114,7 +115,7 @@ int parsecursorpos(tInt64* cursorpos1,tInt64* cursorpos2,char* lastopt,char* arg
 	return RETOK;	
 	
 }
-int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* cursorpos2,tBool* diffmode,int* filename1,int* filename2,tBool* keyboardsetupreq,char* markerfilename,char* configfile)
+int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* cursorpos2,tBool* diffmode,int* filename1,int* filename2,tBool* keyboardsetupreq,char* markerfilename,char* configfile,tSearch* search,tBool* gosearch)
 {
 	int filenamecnt=0;
 	int i;
@@ -122,7 +123,7 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* curs
 	char lastopt[8];
 	tBool moreopts=1;
 
-
+	*gosearch=0;
 	memset(lastopt,0,8);	
 	for (i=1;i<argc;i++)
 	{
@@ -173,15 +174,56 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* curs
 						snprintf(configfile,512,"%s",argv[i]);
 						break;
 				case 'S':
-				case 's':	printf("TODO:search\n");
+				case 's':	
+						*gosearch=1;
+						search->forwardnotbackward=!(lastopt[2]=='b' || lastopt[2]=='B');
+						if (lastopt[1]=='a' || lastopt[1]=='A') 
+						{
+							memcpy(search->searchstring,argv[i],19);
+							search->searchlen=strlen(argv[i]);
+							if (search->searchlen>19) search->searchlen=19;
+						} else if (lastopt[1]=='h' || lastopt[1]=='H') {
+							int j;
+							int k=0;
+							int x=0;
+							search->searchlen=0;
+							for (j=0;j<strlen(argv[i]) && search->searchlen<19;j++)
+							{
+								int y;
+								y=-1;
+								x<<=4;
+								y=(argv[i][j]>='0' && argv[i][j]<='9')?argv[i][j]-'0':y;	
+								y=(argv[i][j]>='a' && argv[i][j]<='f')?argv[i][j]-'a'+10:y;
+								y=(argv[i][j]>='A' && argv[i][j]<='F')?argv[i][j]-'A'+10:y;
+								if (y>=0) 
+								{
+									x|=y;
+									if (k&1)
+									{
+										search->searchstring[search->searchlen++]=(x&0xff);
+									}
+									k++;
+								}
+								else if (argv[i][j]!=' ') 
+								{
+									fprintf(stderr,"illegal character in hex searchstring.\n");
+									retval=RETNOK;
+								}
+							}
+						} else {
+							fprintf(stderr,"please select one of -sa or -sh\n");
+							retval=RETNOK;	
+						}
 						break;
 				case 'r':
 				case 'R':
-						printf("TODO:read searchlog\n");
+						memcpy(search->readlogfilename,argv[i],64);
+						search->readsearchlog=1;
 						break;
 				case 'w':
 				case 'W':
-						printf("TODO:write searchlog\n");
+						memcpy(search->writelogfilename,argv[i],64);
+						search->writesearchlog=1;
 						break;
 				case 'c':
 				case 'C':	printf("TODO:correlation\n");
@@ -235,6 +277,7 @@ int main(int argc,char** argv)
 	tInt64 oldfirstpos2;
 	tSearch search;
 	tMarkers* markers;
+	tBool	gosearch=0;
 	char	markerfilename[64];
 	
 	tUInt8	windowfield=0;	// 0=hex field buffer 1, 1=ascii field buffer 1, 2=hex field buffer 2, 3=ascii field buffer 2
@@ -259,7 +302,8 @@ int main(int argc,char** argv)
 	keyboardsetupreq=0;
 	cursorpos1=0;
 	cursorpos2=0;
-	if (parsecommandlineoptions(argc,argv,&cursorpos1,&cursorpos2,&diffmode,&filename1,&filename2,&keyboardsetupreq,markerfilename,configfile)!=RETOK)
+	clearsearch(&search);
+	if (parsecommandlineoptions(argc,argv,&cursorpos1,&cursorpos2,&diffmode,&filename1,&filename2,&keyboardsetupreq,markerfilename,configfile,&search,&gosearch)!=RETOK)
 	{
 		if (output)
 		{
@@ -308,7 +352,7 @@ int main(int argc,char** argv)
 		}
 		fprintf(f,"#DHEXCOLORSCHEME\n");
 		fprintf(f,"#VERSION 0\n");
-		fprintf(f,"#possible colors are: BLACK,GREEN,GREEN,YELLOW,BLUE,MAGENTA,CYAN,BLACK\n");
+		fprintf(f,"#possible colors are: BLACK,RED,GREEN,YELLOW,BLUE,MAGENTA,CYAN,WHITE\n");
 		fprintf(f,"#possible extra flags are: UNDERLINE,REVERSE,BLINK,DIM,BOLD\n");
 		fprintf(f,"\n");
 		fprintf(f,"BRACKETS:       FG=BLACK,BG=BLACK,BOLD\n");
@@ -350,223 +394,232 @@ int main(int argc,char** argv)
 		fprintf(stderr,"error opening second inputfile %s\n",argv[filename2]);
 		exit(1);
 	}
-	output->win=initscr();
-	pairsinit(output);
-	noecho();
-	nodelay(output->win,1);
-	if (keyboardsetupreq) keyboardsetup(output,configfile);
-	readbuf(buf1,0);
-	firstpos1=cursorpos1;
-	firstpos2=cursorpos2;
-	ch=0;
-	clearsearch(&search);
-	while (ch!=KEYF10)
-	{	
-		printmainmenu(output,diffmode);
-		if (diffmode)
-			printbufferdiff(output,buf1,buf2,cursorpos1,cursorpos2);
-		else		
-			printbuffersingle(output,buf1,cursorpos1,firstpos1,windowfield);
-		ch=getkey((tKeyTab*)output->pKeyTab,1);
+	if (gosearch && !diffmode) searchfor(&search,buf1,&cursorpos1,1);
+	if (!gosearch || diffmode || !search.writesearchlog)
+	{
+		output->win=initscr();
+		pairsinit(output);
+		noecho();
+		nodelay(output->win,1);
+		if (keyboardsetupreq) keyboardsetup(output,configfile);
+		readbuf(buf1,0);
+		firstpos1=cursorpos1;
+		firstpos2=cursorpos2;
+		ch=0;
+		while (ch!=KEYF10)
+		{	
+			printmainmenu(output,diffmode);
+			if (diffmode)
+				printbufferdiff(output,buf1,buf2,cursorpos1,cursorpos2);
+			else		
+				printbuffersingle(output,buf1,cursorpos1,firstpos1,windowfield);
+			ch=getkey((tKeyTab*)output->pKeyTab,1);
 
 #define	MOVEMENTDEFINE(KEY,VIKEY,mvchar,mvline,mvpage)	\
-if (ch==KEY || (VIKEY && ch==VIKEY && windowfield==0))	\
-{	\
-	tInt32	err;	\
-	oldfirstpos1=firstpos1;	\
-	oldcursorpos1=cursorpos1;	\
-	oldfirstpos2=firstpos2;	\
-	oldcursorpos2=cursorpos2;	\
-\
-	err=movepositions(&cursorpos1,&firstpos1,buf1->bufsize,mvchar,mvline,mvpage,diffmode);	\
-\
-	if (diffmode)	\
-	{	\
-		movepositions(&cursorpos2,&firstpos2,buf2->bufsize,mvchar,mvline,mvpage,diffmode);	\
-		err=((cursorpos1<0 && cursorpos2<0) || (cursorpos1>buf1->bufsize && cursorpos2>buf2->bufsize)); \
-	}	\
-	if (err)	\
-	{	\
-		firstpos1=oldfirstpos1;		\
-		cursorpos1=oldcursorpos1;	\
-		firstpos2=oldfirstpos2;		\
-		cursorpos2=oldcursorpos2;	\
-	}	\
-}
-		MOVEMENTDEFINE(KEYRIGHT,'l'	, 1, 0, 0);
-		MOVEMENTDEFINE(KEYLEFT,'h'	,-1, 0, 0);
-		MOVEMENTDEFINE(KEYDOWN,'j'	, 0, 1, 0);
-		MOVEMENTDEFINE(KEYUP,'k'	, 0,-1, 0);
-		MOVEMENTDEFINE(KEYPGDOWN,' '	, 0, 0, 1);
-		MOVEMENTDEFINE(KEYPGUP,0	, 0, 0,-1);
+			if (ch==KEY || (VIKEY && ch==VIKEY && windowfield==0))	\
+			{	\
+				tInt32	err;	\
+				oldfirstpos1=firstpos1;	\
+				oldcursorpos1=cursorpos1;	\
+				oldfirstpos2=firstpos2;	\
+				oldcursorpos2=cursorpos2;	\
+				\
+				err=movepositions(&cursorpos1,&firstpos1,buf1->bufsize,mvchar,mvline,mvpage,diffmode);	\
+				\
+				if (diffmode)	\
+				{	\
+					movepositions(&cursorpos2,&firstpos2,buf2->bufsize,mvchar,mvline,mvpage,diffmode);	\
+					err=((cursorpos1<0 && cursorpos2<0) || (cursorpos1>buf1->bufsize && cursorpos2>buf2->bufsize)); \
+				}	\
+				if (err)	\
+				{	\
+					firstpos1=oldfirstpos1;		\
+					cursorpos1=oldcursorpos1;	\
+					firstpos2=oldfirstpos2;		\
+					cursorpos2=oldcursorpos2;	\
+				}	\
+			}
+			MOVEMENTDEFINE(KEYRIGHT,'l'	, 1, 0, 0);
+			MOVEMENTDEFINE(KEYLEFT,'h'	,-1, 0, 0);
+			MOVEMENTDEFINE(KEYDOWN,'j'	, 0, 1, 0);
+			MOVEMENTDEFINE(KEYUP,'k'	, 0,-1, 0);
+			MOVEMENTDEFINE(KEYPGDOWN,' '	, 0, 0, 1);
+			MOVEMENTDEFINE(KEYPGUP,0	, 0, 0,-1);
 
 #undef	MOVEMENTDEFINE
-		if (ch==KEYHOME || (ch=='^' && windowfield==0))
-		{
-			if (diffmode)
+			if (ch==KEYHOME || (ch=='^' && windowfield==0))
 			{
-				tInt64	dmin,dmax;
-
-				dmin=MIN(cursorpos1,cursorpos2);
-				dmax=MAX(cursorpos1,cursorpos2);
-				if (dmin==0)
+				if (diffmode)
 				{
-					cursorpos1-=dmax;
-					cursorpos2-=dmax;
+					tInt64	dmin,dmax;
+
+					dmin=MIN(cursorpos1,cursorpos2);
+					dmax=MAX(cursorpos1,cursorpos2);
+					if (dmin==0)
+					{
+						cursorpos1-=dmax;
+						cursorpos2-=dmax;
+					} else {
+						cursorpos1-=dmin;
+						cursorpos2-=dmin;
+					}
+					firstpos1=cursorpos1;
+					firstpos2=cursorpos2;
+
 				} else {
-					cursorpos1-=dmin;
-					cursorpos2-=dmin;
+					firstpos1=cursorpos1=0;
 				}
+			}
+			if (ch==KEYEND || (ch=='$' && windowfield==0))
+			{
+				if (diffmode)
+				{
+					tInt64	dmin,dmax;
+					dmin=MIN(buf1->bufsize-cursorpos1,buf2->bufsize-cursorpos2);
+					dmax=MAX(buf1->bufsize-cursorpos1,buf2->bufsize-cursorpos2);
+
+					if (dmin==0)
+					{
+
+						cursorpos2+=dmax;
+						cursorpos1+=dmax;
+					} else {
+						cursorpos1+=dmin;
+						cursorpos2+=dmin;
+					}
+				} else {
+					firstpos1=cursorpos1=buf1->bufsize;
+				}
+			}
+			if (ch==KEYTAB) {windowfield=(windowfield+1)&1;}
+			if ((ch==KEYF1 || (ch==':' && windowfield==0))&& !diffmode)	{
+				if (gotomask(output,markers,&cursorpos1)==RETOK)
+				{
+					firstpos1=cursorpos1;	
+				}
+			}
+			if ((ch==KEYF2 || ((ch=='/' || ch=='?') && (windowfield==0))) && !diffmode)	
+			{
+				if (ch=='/')	search.forwardnotbackward=1;	// / means forward
+				if (ch=='?')	search.forwardnotbackward=0;	// ? means backward
+				searchmask(output,&search,buf1,&cursorpos1);
 				firstpos1=cursorpos1;
-				firstpos2=cursorpos2;
-
-			} else {
-				firstpos1=cursorpos1=0;
 			}
-		}
-		if (ch==KEYEND || (ch=='$' && windowfield==0))
-		{
-			if (diffmode)
+			if (ch==KEYF3 || ch==KEYF4 || (windowfield==0 && (ch=='n' || ch=='N')))
 			{
-				tInt64	dmin,dmax;
-				dmin=MIN(buf1->bufsize-cursorpos1,buf2->bufsize-cursorpos2);
-				dmax=MAX(buf1->bufsize-cursorpos1,buf2->bufsize-cursorpos2);
-
-				if (dmin==0)
+				if (ch=='n')	ch=KEYF3;	// n=next
+				if (ch=='N')	ch=KEYF4;	// N=previous
+				if (diffmode)
 				{
-					
-					cursorpos2+=dmax;
-					cursorpos1+=dmax;
-				} else {
-					cursorpos1+=dmin;
-					cursorpos2+=dmin;
-				}
-			} else {
-				firstpos1=cursorpos1=buf1->bufsize;
-			}
-		}
-		if (ch==KEYTAB) {windowfield=(windowfield+1)&1;}
-		if ((ch==KEYF1 || (ch==':' && windowfield==0))&& !diffmode)	{
-			if (gotomask(output,markers,&cursorpos1)==RETOK)
-			{
-				firstpos1=cursorpos1;	
-			}
-		}
-		if ((ch==KEYF2 || ((ch=='/' || ch=='?') && (windowfield==0))) && !diffmode)	
-		{
-			if (ch=='/')	search.forwardnotbackward=1;	// / means forward
-			if (ch=='?')	search.forwardnotbackward=0;	// ? means backward
-			searchmask(output,&search,buf1,&cursorpos1);
-			firstpos1=cursorpos1;
-		}
-		if (ch==KEYF3 || ch==KEYF4 || (windowfield==0 && (ch=='n' || ch=='N')))
-		{
-			if (ch=='n')	ch=KEYF3;	// n=next
-			if (ch=='N')	ch=KEYF4;	// N=previous
-			if (diffmode)
-			{
-				tInt64	actcursorpos1=cursorpos1;
-				tInt64	actcursorpos2=cursorpos2;
-				tInt32	idx1,idx2;
-				tBool	found;
-				tUInt64	minbufsize=(buf1->bufsize<buf2->bufsize)?buf1->bufsize:buf2->bufsize;	// get the minimum of the filesizes
-				tUInt64	searchcnt=minbufsize;
+					tInt64	actcursorpos1=cursorpos1;
+					tInt64	actcursorpos2=cursorpos2;
+					tInt32	idx1,idx2;
+					tBool	found;
+					tBool	diffnotdiff;
+					tUInt64	minbufsize=(buf1->bufsize<buf2->bufsize)?buf1->bufsize:buf2->bufsize;	// get the minimum of the filesizes
+					tUInt64	searchcnt=minbufsize;
 
-				oldcursorpos1=cursorpos1;
-				oldcursorpos2=cursorpos2;
-				actcursorpos1=actcursorpos1+((ch==KEYF3)?1:-1);	// F3: next, F4:prev
-				actcursorpos2=actcursorpos2+((ch==KEYF3)?1:-1);	// F3: next, F4:prev
-				found=(!minbufsize);
-				while (actcursorpos1!=oldcursorpos1 && actcursorpos2!=oldcursorpos2 && searchcnt && !found)
-				{
+					oldcursorpos1=cursorpos1;
+					oldcursorpos2=cursorpos2;
+					actcursorpos1=actcursorpos1+((ch==KEYF3)?1:-1);	// F3: next, F4:prev
+					actcursorpos2=actcursorpos2+((ch==KEYF3)?1:-1);	// F3: next, F4:prev
+					found=(!minbufsize);
 					idx1=getbufferidx(buf1,actcursorpos1);
 					idx2=getbufferidx(buf2,actcursorpos2);
-					if (buf1->data[idx1]!=buf2->data[idx2]) found=1;
-					else 	{
-						actcursorpos1=actcursorpos1+((ch==KEYF3)?1:-1);	// F3: next, F4:prev
-						actcursorpos2=actcursorpos2+((ch==KEYF3)?1:-1);	// F3: next, F4:prev
-					}
-					if (actcursorpos1<0 || actcursorpos2<0) 
+					diffnotdiff=(buf1->data[idx1]!=buf2->data[idx2]);	// if the cursor is on something which is a diff, look for the next time the values are the same
+					while (actcursorpos1!=oldcursorpos1 && actcursorpos2!=oldcursorpos2 && searchcnt && !found)
 					{
-						actcursorpos1+=minbufsize;	// start at the end of the smallest file
-						actcursorpos2+=minbufsize;	// start at the end of the smallest file
+						idx1=getbufferidx(buf1,actcursorpos1);
+						idx2=getbufferidx(buf2,actcursorpos2);
+						if ((buf1->data[idx1]!=buf2->data[idx2]) != diffnotdiff) found=1;
+						else 	{
+							actcursorpos1=actcursorpos1+((ch==KEYF3)?1:-1);	// F3: next, F4:prev
+							actcursorpos2=actcursorpos2+((ch==KEYF3)?1:-1);	// F3: next, F4:prev
+						}
+						if (actcursorpos1<0 || actcursorpos2<0) 
+						{
+							actcursorpos1+=minbufsize;	// start at the end of the smallest file
+							actcursorpos2+=minbufsize;	// start at the end of the smallest file
+						}
+						if (actcursorpos1>=minbufsize && actcursorpos2>=minbufsize)
+						{
+							actcursorpos1-=minbufsize;		// if you are at the end of the smallest file, start at the beginning
+							actcursorpos2-=minbufsize;		// if you are at the end of the smallest file, start at the beginning
+						}
+						searchcnt--;	
 					}
-					if (actcursorpos1>=minbufsize && actcursorpos2>=minbufsize)
+					if (found) 
 					{
-						actcursorpos1-=minbufsize;		// if you are at the end of the smallest file, start at the beginning
-						actcursorpos2-=minbufsize;		// if you are at the end of the smallest file, start at the beginning
+						cursorpos1=actcursorpos1;
+						cursorpos2=actcursorpos2;
 					}
-					searchcnt--;	
-				}
-				if (found) 
+				} 
+				else if (search.occurancesfound)
 				{
-					cursorpos1=actcursorpos1;
-					cursorpos2=actcursorpos2;
+					searchfor(&search,buf1,&cursorpos1,(ch==KEYF3));	// f3: next
+					firstpos1=cursorpos1;
 				}
-			} 
-			else if (search.occurancesfound)
+			}	
+			if (ch==KEYF5)	hexcalc(output,hHexCalc);
+			if ((ch==KEYF9 || (ch=='u' && windowfield==0)) && !diffmode)
 			{
-				searchfor(&search,buf1,&cursorpos1,(ch==KEYF3));	// f3: next
-				firstpos1=cursorpos1;
-			}
-		}	
-		if (ch==KEYF5)	hexcalc(output,hHexCalc);
-		if ((ch==KEYF9 || (ch=='u' && windowfield==0)) && !diffmode)
-		{
-			if (buf1->changesnum) 
-			{
-				if ((buf1->changes[buf1->changesnum].pos==(buf1->bufsize-1) && (buf1->filesize<=buf1->changes[buf1->changesnum].pos))) buf1->bufsize--;	// if this was the last byte in the buffer, decrease its size
-				cursorpos1=buf1->changes[--buf1->changesnum].pos;
-				if (cursorpos1<firstpos1) firstpos1=cursorpos1;
-				if ((firstpos1+100)>cursorpos1) firstpos1=cursorpos1;	// TODO: 100 depends on the size of the window
-			}
+				if (buf1->changesnum) 
+				{
+					if ((buf1->changes[buf1->changesnum].pos==(buf1->bufsize-1) && (buf1->filesize<=buf1->changes[buf1->changesnum].pos))) buf1->bufsize--;	// if this was the last byte in the buffer, decrease its size
+					cursorpos1=buf1->changes[--buf1->changesnum].pos;
+					if (cursorpos1<firstpos1) firstpos1=cursorpos1;
+					if ((firstpos1+100)>cursorpos1) firstpos1=cursorpos1;	// TODO: 100 depends on the size of the window
+				}
 
-		}
-		if (buf1->changesnum<CHANGEBUFSIZE-1 && !diffmode)
-		{
-			if (((ch>='0' && ch<='9') || (ch>='a' && ch<='f') || (ch>='A' && ch<='F')) && windowfield==0)
+			}
+			if (buf1->changesnum<CHANGEBUFSIZE-1 && !diffmode)
 			{
-				buf1->nexthex<<=4;
-				if (ch>='a') ch-=32;
-				buf1->nexthex|=((ch>='A')?(ch-'A'+10):(ch-'0'));
+				if (((ch>='0' && ch<='9') || (ch>='a' && ch<='f') || (ch>='A' && ch<='F')) && windowfield==0)
+				{
+					buf1->nexthex<<=4;
+					if (ch>='a') ch-=32;
+					buf1->nexthex|=((ch>='A')?(ch-'A'+10):(ch-'0'));
 					if (buf1->nibble)
+					{
+						if (cursorpos1==buf1->bufsize) buf1->bufsize++;	// append the byte at the end
+						buf1->changes[buf1->changesnum].pos=cursorpos1;
+						buf1->changes[buf1->changesnum].after=buf1->nexthex;
+						buf1->changesnum++;
+						movepositions(&cursorpos1,&firstpos1,buf1->bufsize,1,0,0,diffmode);
+					}
+					buf1->nibble=!buf1->nibble;
+					buf1->changepos=cursorpos1;
+				} else buf1->nibble=0;
+				if (ch>=32 && ch<127 && windowfield==1)
 				{
 					if (cursorpos1==buf1->bufsize) buf1->bufsize++;	// append the byte at the end
 					buf1->changes[buf1->changesnum].pos=cursorpos1;
-					buf1->changes[buf1->changesnum].after=buf1->nexthex;
-						buf1->changesnum++;
+					buf1->changes[buf1->changesnum].after=ch;
+					buf1->changesnum++;
 					movepositions(&cursorpos1,&firstpos1,buf1->bufsize,1,0,0,diffmode);
 				}
-				buf1->nibble=!buf1->nibble;
-				buf1->changepos=cursorpos1;
-			} else buf1->nibble=0;
-			if (ch>=32 && ch<127 && windowfield==1)
+			}
+			if (ch==KEYF10)
 			{
-				if (cursorpos1==buf1->bufsize) buf1->bufsize++;	// append the byte at the end
-				buf1->changes[buf1->changesnum].pos=cursorpos1;
-				buf1->changes[buf1->changesnum].after=ch;
-				buf1->changesnum++;
-				movepositions(&cursorpos1,&firstpos1,buf1->bufsize,1,0,0,diffmode);
+				if (buf1->changesnum) if (savedialog(output,buf1)!=RETOK)
+				{
+					ch=0;
+				}
 			}
 		}
-		if (ch==KEYF10)
+		if (output)
 		{
-			if (buf1->changesnum) if (savedialog(output,buf1)!=RETOK)
-			{
-				ch=0;
-			}
+			if (output->pKeyTab) free(output->pKeyTab);
+			free(output);
 		}
+		if (buf1) free(buf1);
+		if (buf2) free(buf2);
+		if (hHexCalc)	free(hHexCalc);
+		if (markers)	free(markers);
+		if (output->win) endwin();
+		welcomescreen(argv[0]);
+	} else {
+		fprintf(stderr,"%lli occurances found\n",search.occurancesfound);
 	}
-	if (output)
-	{
-		if (output->pKeyTab) free(output->pKeyTab);
-		free(output);
-	}
-	if (buf1) free(buf1);
-	if (buf2) free(buf2);
-	if (hHexCalc)	free(hHexCalc);
-	if (markers)	free(markers);
-	if (output->win) endwin();
-	welcomescreen(argv[0]);
 	return 0;
 }

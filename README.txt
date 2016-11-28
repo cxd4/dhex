@@ -1,6 +1,6 @@
 -----------------------------------------------------------------[ 0. Welcome ]-
 
-Thank you for downloading dhex 0.61. It is a hex editor with a diff mode.
+Thank you for downloading dhex 0.63. It is a hex editor with a diff mode.
 Since it is based on ncurses, it runs in any console.
 It makes heavy use of colors, but it is themeable to run on monochrome-displays
 as well.
@@ -15,6 +15,7 @@ Thomas Dettbarn, 30-Dec-2010
 0.61: Some code cleanup, rudementary manual correlation is possible through 
       commandline parameters
 0.62: Code cleanup, bug fixes, and as new features: bookmarks and ascii-search.
+0.63: Man pages were written, searching is possible from the command line.
 
 ---------------------------------------------------------[ 1. Getting started ]-
 
@@ -91,7 +92,18 @@ close upon finding the first occuracnce, and set the cursor there.
 
 Press F3 to go to the next occurace, or F4 to the previous one.
 
+Searching is also possible from the command line: Simply apply the -sa, -sab, 
+-sh, -shb parameters. To write into a searchlog, -w is the parameter to go. To 
+read from it, -r can be used. For example
 
+% ./dhex -oh affe -shb d00f dhex
+
+sets the cursor to 0xaffe, and searches for the hex string "d0 0f" backwards 
+from there.
+
+% ./dhex -oh affe -shb d00f -w occurances.log dhex 
+
+writes the results into a logfile called "occurances.log" and exits.
 
 -----------------------------------------------------------------[ 5. Hexcalc ]-
 
