@@ -9,20 +9,20 @@
 void initcolors(tOutput* output)
 {
 
-	output->colors[COLOR_BRACKETS].fg	=COLOR_WHITE;	output->colors[COLOR_BRACKETS].bg	=COLOR_BLACK;	output->colors[COLOR_BRACKETS].attrs	=0;
+	output->colors[COLOR_BRACKETS].fg	=COLOR_BLACK;	output->colors[COLOR_BRACKETS].bg	=COLOR_BLACK;	output->colors[COLOR_BRACKETS].attrs	=A_BOLD;
+	output->colors[COLOR_HEXFIELD].fg	=COLOR_WHITE;	output->colors[COLOR_HEXFIELD].bg	=COLOR_BLACK;	output->colors[COLOR_HEXFIELD].attrs	=0;
 	output->colors[COLOR_INPUT].fg		=COLOR_BLACK;	output->colors[COLOR_INPUT].bg		=COLOR_WHITE;	output->colors[COLOR_INPUT].attrs	=0;
 	output->colors[COLOR_CURSOR].fg		=COLOR_WHITE;	output->colors[COLOR_CURSOR].bg		=COLOR_BLACK;	output->colors[COLOR_CURSOR].attrs	=0;
-	output->colors[COLOR_TEXT].fg		=COLOR_WHITE;	output->colors[COLOR_TEXT].bg		=COLOR_BLACK;	output->colors[COLOR_TEXT].attrs	=A_BOLD;
-	output->colors[COLOR_HEXFIELD].fg	=COLOR_WHITE;	output->colors[COLOR_HEXFIELD].bg	=COLOR_BLACK;	output->colors[COLOR_HEXFIELD].attrs	=0;
+	output->colors[COLOR_TEXT].fg		=COLOR_CYAN;	output->colors[COLOR_TEXT].bg		=COLOR_BLACK;	output->colors[COLOR_TEXT].attrs	=A_BOLD;
+	output->colors[COLOR_MENUNORMAL].fg	=COLOR_BLUE;	output->colors[COLOR_MENUNORMAL].bg	=COLOR_BLACK;	output->colors[COLOR_MENUNORMAL].attrs	=A_BOLD;
+	output->colors[COLOR_MENUACTIVE].fg	=COLOR_BLUE;	output->colors[COLOR_MENUACTIVE].bg	=COLOR_BLUE;	output->colors[COLOR_MENUACTIVE].attrs	=A_BOLD;
+	output->colors[COLOR_MENUHOTKEY].fg	=COLOR_CYAN;	output->colors[COLOR_MENUHOTKEY].bg	=COLOR_BLACK;	output->colors[COLOR_MENUHOTKEY].attrs	=0;
+	output->colors[COLOR_MENUHOTKEYACTIVE].fg=COLOR_CYAN;	output->colors[COLOR_MENUHOTKEYACTIVE].bg=COLOR_BLUE;	output->colors[COLOR_MENUHOTKEYACTIVE].attrs=0;
+	output->colors[COLOR_FRAME].fg		=COLOR_BLUE;	output->colors[COLOR_FRAME].bg		=COLOR_BLACK;	output->colors[COLOR_FRAME].attrs	=0;
 	output->colors[COLOR_DIFF].fg		=COLOR_YELLOW;	output->colors[COLOR_DIFF].bg		=COLOR_BLACK;	output->colors[COLOR_DIFF].attrs	=A_BOLD;
-	output->colors[COLOR_HEADLINE].fg	=COLOR_BLUE;	output->colors[COLOR_HEADLINE].bg	=COLOR_BLACK;	output->colors[COLOR_HEADLINE].attrs	=A_BOLD;
+	output->colors[COLOR_HEADLINE].fg	=COLOR_BLUE;	output->colors[COLOR_HEADLINE].bg	=COLOR_BLACK;	output->colors[COLOR_HEADLINE].attrs	=0;
 //	output->colors[COLOR_INFO].fg		=COLOR_WHITE;	output->colors[COLOR_INFO].bg		=COLOR_BLACK;	output->colors[COLOR_INFO].attrs	=A_BOLD;
 	output->colors[COLOR_HEADER].fg		=COLOR_BLACK;	output->colors[COLOR_HEADER].bg		=COLOR_CYAN;	output->colors[COLOR_HEADER].attrs	=0;
-	output->colors[COLOR_MENUHOTKEY].fg	=COLOR_YELLOW;	output->colors[COLOR_MENUHOTKEY].bg	=COLOR_BLACK;	output->colors[COLOR_MENUHOTKEY].attrs	=A_BOLD;
-	output->colors[COLOR_MENUNORMAL].fg	=COLOR_CYAN;	output->colors[COLOR_MENUNORMAL].bg	=COLOR_BLACK;	output->colors[COLOR_MENUNORMAL].attrs	=A_BOLD;
-	output->colors[COLOR_FRAME].fg		=COLOR_BLUE;	output->colors[COLOR_FRAME].bg		=COLOR_BLACK;	output->colors[COLOR_FRAME].attrs	=A_BOLD;
-	output->colors[COLOR_MENUACTIVE].fg	=COLOR_BLACK;	output->colors[COLOR_MENUACTIVE].bg	=COLOR_CYAN;	output->colors[COLOR_MENUACTIVE].attrs	=0;
-	output->colors[COLOR_MENUHOTKEYACTIVE].fg=COLOR_YELLOW;	output->colors[COLOR_MENUHOTKEYACTIVE].bg=COLOR_CYAN;	output->colors[COLOR_MENUHOTKEYACTIVE].attrs=A_BOLD;	
 }	
 void colorpair(tOutput* output,uicolors uicol,short fg,short bg,int attr)
 {

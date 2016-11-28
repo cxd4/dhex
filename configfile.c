@@ -23,7 +23,8 @@ typedef struct _tColorGroup
 	uicolors uicol;		
 } tColorGroup;
 
-const tColorGroup colorGroups[13]={
+#define	NUMCOLORGROUPS	14
+const tColorGroup colorGroups[NUMCOLORGROUPS]={
 				{"BRACKETS:",		 9,COLOR_BRACKETS},
 				{"HEXFIELD:",		 9,COLOR_HEXFIELD},
 				{"INPUT:",		 6,COLOR_INPUT},
@@ -36,8 +37,12 @@ const tColorGroup colorGroups[13]={
 				{"NORMAL_DIFF:",	12,COLOR_DIFF},
 				{"CURSOR_DIFF:",	12,COLOR_CURSORDIFF},	
 				{"HEADLINE:",		 9,COLOR_HEADLINE},
-				{"FRAME:",		 6,COLOR_FRAME}};
-const tColorName colorNames[20]={	{"BLACK",	5,COLOR_BLACK,0},
+				{"HEADER:",		 7,COLOR_HEADER},
+				{"FRAME:",		 6,COLOR_FRAME}
+				};
+#define	NUMCOLORNAMES	20
+const tColorName colorNames[NUMCOLORNAMES]={
+					{"BLACK",	5,COLOR_BLACK,0},
 					{"RED",		3,COLOR_RED,0},
 					{"GREEN",	5,COLOR_GREEN,0},
 					{"BLUE",	4,COLOR_BLUE,0},
@@ -57,13 +62,17 @@ const tColorName colorNames[20]={	{"BLACK",	5,COLOR_BLACK,0},
 					{"LIGHTCYAN",	 9,COLOR_CYAN,A_BOLD},
 					{"LIGHTWHITE",	10,COLOR_WHITE,A_BOLD},
 					{"LIGHTYELLOW",	11,COLOR_YELLOW,A_BOLD},
-					{"LIGHTBROWN",	10,COLOR_YELLOW,A_BOLD}};
+					{"LIGHTBROWN",	10,COLOR_YELLOW,A_BOLD}
+				};
 
-const tColorName attrNames[5]={		{"UNDERLINE",	 9,0,A_UNDERLINE},
+#define	NUMATTRNAMES	5
+const tColorName attrNames[NUMATTRNAMES]={
+					{"UNDERLINE",	 9,0,A_UNDERLINE},
 					{"REVERSE",	 7,0,A_REVERSE},
 					{"BLINK",	 5,0,A_BLINK},
 					{"DIM",		 3,0,A_DIM},
-					{"BOLD",	 4,0,A_BOLD}};
+					{"BOLD",	 4,0,A_BOLD}
+				};
 
 int getcolors(tOutput* output,char* line)
 {
@@ -118,8 +127,9 @@ int getcolors(tOutput* output,char* line)
 	col1=0;col2=0;
 	attrs1=0;attrs2=0;
 	attrsret=0;
-	for (i=0;i<20;i++)
+	for (i=0;i<NUMCOLORNAMES;i++)
 	{
+		//printf("   colorNames[i].name=%s,token[2]=%s\n",colorNames[i].name,token[2]);
 		if (strncmp(token[2],colorNames[i].name,colorNames[i].len)==0) {col1=colorNames[i].val;attrs1=colorNames[i].attrs;}
 		if (strncmp(token[4],colorNames[i].name,colorNames[i].len)==0) {col2=colorNames[i].val;attrs2=colorNames[i].attrs;}
 	}
@@ -144,12 +154,12 @@ int getcolors(tOutput* output,char* line)
 		bg=col2;
 		attrsret|=(attrs2==A_BOLD)?A_BLINK:attrs2;
 	}
-	for (i=0;i<5;i++)
+	for (i=0;i<NUMATTRNAMES;i++)
 	{
 		if (strncmp(attrNames[i].name,token[5],attrNames[i].len)==0) attrsret|=attrNames[i].attrs;
 	}
 
-	for (i=0;i<13;i++)
+	for (i=0;i<NUMCOLORGROUPS;i++)
 	{
 		if (strncmp(colorGroups[i].configname,token[0],colorGroups[i].len)==0)
 		{

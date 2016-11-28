@@ -1,6 +1,6 @@
 #define	MAJORVERSION	0
 #define	MINORVERSION	6
-#define	REVISION	5
+#define	REVISION	6
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -231,8 +231,44 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* curs
 							search->forwardnotbackward=!(lastopt[2]=='b' || lastopt[2]=='B');
 							if (stringtype==1)
 							{
-								memcpy(search->searchstring,argv[i],19);
-								search->searchlen=strlen(argv[i]);
+								if (argv[i][0]=='"' || argv[i][0]=='\'')
+								{
+									char quotechar=argv[i][0];
+									int j,k=0;
+									int start=1;
+									int found=0;
+									
+									while (!found && i<argc)
+									{
+										int escape=0;
+										k=0;
+										for (j=start;j<strlen(argv[i]);j++)
+										{
+											if (!escape && argv[i][j]==quotechar) found=1;
+											
+											if (!found && k<19 && (argv[i][j]!='\\' || escape))
+											{
+												search->searchstring[k++]=argv[i][j];	
+												search->searchstring[k]=0;
+											}
+											if (argv[i][j]=='\\' && !escape) escape=1;
+											else escape=0;
+										}	
+										start=0;
+										if (!found) {
+											i++;
+											if (k<19) 
+											{
+												search->searchstring[k++]=' ';
+												search->searchstring[k]=0;
+											}
+										}
+									}
+									search->searchlen=k;
+								} else {
+									memcpy(search->searchstring,argv[i],19);
+									search->searchlen=strlen(argv[i]);
+								}
 								if (search->searchlen>19) search->searchlen=19;
 							} else if (stringtype==2) {
 								int k=0;
@@ -431,6 +467,8 @@ int main(int argc,char** argv)
 		fprintf(f,"NORMAL_DIFF:    FG=YELLOW,BG=BLACK,BOLD\n");
 		fprintf(f,"CURSOR_DIFF:    FG=YELLOW,BG=WHITE,BOLD\n");
 		fprintf(f,"HEADLINE:       FG=BLUE,BG=BLACK\n");
+		fprintf(f,"HEADER:         FG=BLACK,BG=CYAN\n");
+
 		fprintf(f,"	\n");
 		fclose(f);
 		retval=2;

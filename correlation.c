@@ -179,7 +179,7 @@ void find_mindiff(tOutput* output,tCorrelation* correlation,tBuffer* buf1,tBuffe
 	tBuffer* smallbuf;
 	tBuffer* bigbuf;
 	tInt64	match;
-	tBool	found;
+	tBool	found=0;
 
 	
 	

@@ -29,10 +29,10 @@ dhex:	$(OFILES)
 install:all
 	strip dhex
 	cp dhex $(DESTDIR)/bin
-	cp dhex.1 $(DESTDIR)/share/man/man1
-	cp dhexrc.5 $(DESTDIR)/share/man/man5
-	cp dhex_markers.5 $(DESTDIR)/share/man/man5
-	cp dhex_searchlog.5 $(DESTDIR)/share/man/man5
+	cp dhex.1 $(DESTDIR)/man/man1
+	cp dhexrc.5 $(DESTDIR)/man/man5
+	cp dhex_markers.5 $(DESTDIR)/man/man5
+	cp dhex_searchlog.5 $(DESTDIR)/man/man5
 
 	
 

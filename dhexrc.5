@@ -52,6 +52,8 @@ A typical .dhexrc file looks like this:
 .br
 .Ql HEADLINE:       FG=BLUE,BG=BLACK,BOLD
 .br
+.Ql HEADER:         FG=BLACK,BG=CYAN
+.br
 .br
 .Ql KEYF1:1b 5b 31 31 7e
 .br
@@ -104,7 +106,7 @@ In the example above, the dhexrc file has three distinct sections: A comment sec
 .Ss Comments
 Comments are indicated with a '#' character. Everything afterwards in a line is being ignored when parsing the file
 .Ss Color section
-There are 13 color groups. Each of the color group has a foreground color, a background color and some extra flags, coming from ncurses. The foreground color is being defined by
+There are 14 color groups. Each of the color group has a foreground color, a background color and some extra flags, coming from ncurses. The foreground color is being defined by
 .Nm FG=
 while the background color is being defined by
 .Nm BG=.
@@ -163,6 +165,8 @@ Differences in the file's content (either because of changes or because dhex is 
 If the cursor is on one of those differences, it will have this color.
 .It HEADLINE:
 On top of the screen, there is a headline. Which is shown in this color.
+.It HEADER:
+In the headline, there are brackets. Within those brackets is the header. It tells you what the window is all about.
 .El
 .Ss Key conversion tab section
 When pressing a "standard" key, something which can be mapped directly to an ascii character, only this character will end up in ncurses' buffer. However, pressing special keys like (for example)
