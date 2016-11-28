@@ -98,6 +98,43 @@ tInt16 getkey(tKeyTab* pKeyTab,tBool inputfield)		// =1 this is an inputfield. w
 }
 
 
+tInt16 decinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,tInt16 len)
+{
+	tInt16 i;
+	tInt16 ch;
+	tInt16 done=0;
+	tUInt64	newval;
+	char tmpbuf[21];
+
+	newval=*val;
+	setcolor(output,COLOR_BRACKETS);
+	mvwprintw(output->win,y,x,"[");
+	mvwprintw(output->win,y,x+len,"]");
+	while (!done)
+	{
+		setcolor(output,COLOR_INPUT);
+		snprintf(tmpbuf,21,"%20lli",newval);
+		for (i=0;i<len && i<20;i++) mvwprintw(output->win,y,x+len-i,"%c",tmpbuf[20-i]);
+		wmove(output->win,y,x+len);
+		ch=getkey(output->pKeyTab,1);
+		if (ch==KEYENTER) done=1;
+		if (ch==KEYTAB) done=1;
+		if (ch==KEYESC) done=1;
+		if (ch>='0' && ch<='9') 
+		{
+			newval=newval*10;
+			newval=newval+(ch-'0');
+		}
+		if (ch==KEYBACKSPACE || ch==KEYDEL)
+		{
+			newval=newval/10;
+		}		
+	}
+	if (ch!=KEYESC) {
+		*val=newval;
+	}
+	return ch;
+}
 tInt16 hexinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,char* relative,tInt16 len)
 {
 	char e;
@@ -300,7 +337,7 @@ int	configkeytab(tKeyTab* pKeyTab,char* line)
 				x<<=4;
 				if (line[j]>='0' && line[j]<='9') x|=(line[j]-'0');
 				if (line[j]>='A' && line[j]<='F') x|=(line[j]-'A'+10);
-				if (x&0x100)
+				if (x&0x100 && pKeyTab[i].seqlen<8)
 				{
 					pKeyTab[i].seq[pKeyTab[i].seqlen++]=(x&0xff);
 					x=1;
@@ -369,7 +406,7 @@ int writeconfigfile(tOutput* output,char* configfilename)
 		fprintf(f,"%s",pKeyTab[i].config);
 		for (j=0;j<pKeyTab[i].seqlen;j++)
 		{
-			fprintf(f,"%02x ",pKeyTab[i].seq[j]);
+			fprintf(f,"%02x ",((unsigned int)pKeyTab[i].seq[j])&0xff);
 		}
 		fprintf(f,"\n");
 	}

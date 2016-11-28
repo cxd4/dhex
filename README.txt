@@ -16,6 +16,7 @@ Thomas Dettbarn, 30-Dec-2010
       commandline parameters
 0.62: Code cleanup, bug fixes, and as new features: bookmarks and ascii-search.
 0.63: Man pages were written, searching is possible from the command line.
+0.64: Naive correlation, a new default theme
 
 ---------------------------------------------------------[ 1. Getting started ]-
 
@@ -192,6 +193,27 @@ binary, -o1h for hexadecimal or -o1o for octal.
 If the garbage is in the second file, just use
 
 % dhex -o2d 7 file1 file2
+
+Since version 0.64 there is also a way of doing this automatically: Pressing
+F6 in the GUI will open up a dialog where you can select one of three
+correlation algorithms. They are painfully slow, but they'll do the job.
+Those three algorithms are:
+
+- best match
+  move the two files in such a way that as many bytes match as possible
+- longest match
+  move the two files in such a way that as many consecutive bytes match as
+  possible
+- minimum diff
+  move the two files in such a way that as little bytes differ as possible. This
+  algorithm requires an upper limit to improve its speed.
+
+To invoke correlation from the command line, use one of these
+
+% dhex -cb file1 file2  # best match
+% dhex -cl file1 file2  # longest match
+% dhex -cd 1000 file1 file2 # minimum difference, with the upper limit of 1000.
+  
 
 
 --------------------------------------------------------------[ 8. Disclaimer ]-

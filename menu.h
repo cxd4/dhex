@@ -4,21 +4,8 @@
 #include "machine_type.h"
 #include "config.h"
 #include "output.h"
+#include "datatypes.h"
 
-typedef struct _tMenuItem
-{
-	char menutext[64];
-	tUInt16 x;
-	tUInt16 y;
-	char hotkey;
-} tMenuItem;
-
-typedef struct _tMenu
-{
-	tMenuItem MenuItems[64];
-	int menuitemnum;
-	int menuitemactive;
-} tMenu;
 
 void clearMenu(tMenu* Menu);
 void newMenuItem(tMenu* Menu,char* text,tUInt16 y,tUInt16 x,char hotkey,tBool active,tInt8* itemnum);

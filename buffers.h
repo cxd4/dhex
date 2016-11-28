@@ -5,30 +5,7 @@
 #include <stdlib.h>
 #include "machine_type.h"
 #include "config.h"
-typedef	struct	_tChange
-{
-	tUInt64	pos;
-	tUInt8	before;
-	tUInt8	after;
-} tChange;
-
-typedef struct _tBuffer
-{
-	tBool	valid;
-	tUInt8	data[BUFFERSIZE];
-	tUInt64 filesize;	// the size of the actual file
-	tUInt64 bufsize;	// the size of the buffer, in case some bytes are added at the end
-	tUInt64 bufferpos;	// the offset from where this chunk has been read
-	tBool	fresh;		// =1 if there is no data in this buffer
-	tFptr	file;		// the file pointer
-	char	filename[512];	// the file name
-	tChange	changes[CHANGEBUFSIZE];
-	tUInt32	changesnum;	// number of changes
-	tBool	nibble;
-	tUInt8	nexthex;
-	tUInt64	changepos;
-} tBuffer;
-
+#include "datatypes.h"
 
 // opens a buffer, bufnum has to be either 1 or 2
 tUInt32 openbuf(tBuffer* hBuf,tUInt8 bufnum,char* filename);

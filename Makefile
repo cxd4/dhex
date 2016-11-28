@@ -7,7 +7,19 @@ CFLAGS=		-O3 -Wall -std=c99
 LIBS=		-lncurses
 DESTDIR=	/usr/local/
 
-OFILES=buffers.o input.o output.o machine_type.o main.o menu.o ui.o hexcalc.o search.o gpl.o configfile.o markers.o
+OFILES=buffers.o \
+	configfile.o \
+	correlation.o \
+	gpl.o \
+	hexcalc.o \
+	input.o \
+	machine_type.o \
+	main.o \
+	markers.o \
+	menu.o \
+	output.o \
+	search.o \
+	ui.o
 
 all:	dhex
 

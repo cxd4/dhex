@@ -1,6 +1,6 @@
 #define	MAJORVERSION	0
 #define	MINORVERSION	6
-#define	REVISION	3
+#define	REVISION	4
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -17,6 +17,7 @@
 #include "search.h"
 #include "gpl.h"
 #include "markers.h"
+#include "correlation.h"
 
 void welcomescreen(char* argv0)
 {
@@ -61,14 +62,20 @@ void helpscreen(char* argv0,int exitval)
 	fprintf(stderr," -oo, -OO [x]                 set the cursor to [x] (octal)\n");
 	fprintf(stderr," -sa, -SA, -sab, -SAB [x]     find the ascii string x in file (b=backwards)\n");
 	fprintf(stderr," -sh, -SH, -shb, -SHB [x]     find the hex string x in file (b=backwards)\n");
-	//fprintf(stderr," -r, -R [read searchlog]    read the search positions from this searchlog (TODO)\n");
-	//fprintf(stderr," -w, -W [write searchlog]   write the location of the occurances to this log (TODO)\n");
+	fprintf(stderr," -r, -R [read searchlog]      read the search positions from this searchlog\n");
+	fprintf(stderr," -w, -W [write searchlog]     write the location of the occurances to this log\n");
 	fprintf(stderr,"\n");
 	fprintf(stderr,"%s [Parameters] [Filename1] [Filename2]: Diff mode\n",argv0);
-	fprintf(stderr," -o1b, -O1B [x] -o2b, -O2B [y]  set the cursors to [x] and [y] (binary)\n");
-	fprintf(stderr," -o1d, -O1D [x] -o2d, -O2D [y]  set the cursors to [x] and [y] (decimal)\n");
-	fprintf(stderr," -o1h, -O1H [x] -o2h, -O2H [y]  set the cursors to [x] and [y] (hexadecimal)\n");
-	fprintf(stderr," -o1o, -O1O [x] -o2o, -O2O [y]  set the cursors to [x] and [y] (octal)\n");
+	fprintf(stderr," -cd, -CD [x]                      correlate with the minimum difference\n");
+	fprintf(stderr," -cb, -CB, -cl, -CL                correlate with the best/longest match\n");
+	fprintf(stderr," -o1b, -O1B  [x] -o2b, -O2B  [y]   set the cursors to [x] and [y] (binary)\n");
+	fprintf(stderr," -o1d, -O1D  [x] -o2d, -O2D  [y]   set the cursors to [x] and [y] (decimal)\n");
+	fprintf(stderr," -o1h, -O1H  [x] -o2h, -O2H  [y]   set the cursors to [x] and [y] (hexadecimal)\n");
+	fprintf(stderr," -o1o, -O1O  [x] -o2o, -O2O  [y]   set the cursors to [x] and [y] (octal)\n");
+	fprintf(stderr," -s1a, -s1ab [x] -s2a, -s2ab [y]   find the ascii strings [x] and [y]\n");
+	fprintf(stderr," -s1h, -s1hb [x] -s2h, -s2hb [y]   find the hex strings [x] and [y]\n");
+	fprintf(stderr," -r1 [searchlog1] -r2 [searchlog2] read the search positions from searchlogs\n");
+	fprintf(stderr," -w1 [searchlog1] -w2 [searchlog2] write the search positions to searchlogs\n");
 	//fprintf(stderr," -c, -C [corrlen]           find the best correlation between the files (TODO)\n");
 	exit(exitval);
 }
@@ -115,7 +122,7 @@ int parsecursorpos(tInt64* cursorpos1,tInt64* cursorpos2,char* lastopt,char* arg
 	return RETOK;	
 	
 }
-int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* cursorpos2,tBool* diffmode,int* filename1,int* filename2,tBool* keyboardsetupreq,char* markerfilename,char* configfile,tSearch* search,tBool* gosearch)
+int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* cursorpos2,tBool* diffmode,int* filename1,int* filename2,tBool* keyboardsetupreq,char* markerfilename,char* configfile,tSearch* search1,tBool* gosearch1,tSearch* search2,tBool* gosearch2,tCorrelation* correlation,tBool* gocorr)
 {
 	int filenamecnt=0;
 	int i;
@@ -123,7 +130,9 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* curs
 	char lastopt[8];
 	tBool moreopts=1;
 
-	*gosearch=0;
+	*gosearch1=0;
+	*gosearch2=0;
+	*gocorr=0;
 	memset(lastopt,0,8);	
 	for (i=1;i<argc;i++)
 	{
@@ -136,15 +145,27 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* curs
 						if (argv[i][2]) retval=RETNOK;
 						moreopts=0;
 						break;
+				case 'c':	// searching for a correlation could be a two-parted search.
+				case 'C':	
+						*gocorr=1;
+						if (lastopt[1]=='d' || lastopt[1]=='D')	correlation->algorithm=CORR_MIN_DIFF;		// min diff, this is two parted
+						else if (lastopt[1]=='b' || lastopt[1]=='B')	{correlation->algorithm=CORR_BEST_MATCH;lastopt[0]=0;}	// best match
+						else if (lastopt[1]=='l' || lastopt[1]=='L')	{correlation->algorithm=CORR_LONGEST_MATCH;lastopt[0]=0;}	// longest match
+						else {
+							fprintf(stderr,"unknown correlation algorithm. please provide -cb, -cd or -cl\n");
+							exit(1);
+						}
+
+						break;
 				case '?':
 				case 'H':	
-				case 'h':	helpscreen(argv[0],1);	// print the helpscreen and be done with it
+				case 'h':	helpscreen(argv[0],0);	// print the helpscreen and be done with it
 						lastopt[0]=0;
 						break;
 				case 'g':
 				case 'G':
 						print_gpl();		// print the gpl and be done with it
-						exit(1);
+						exit(0);
 						lastopt[0]=0;
 						break;	
 				case 'X':
@@ -158,7 +179,7 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* curs
 				case 'v':
 				case 'V':
 						printf("%i.%i%i\n",MAJORVERSION,MINORVERSION,REVISION);
-						exit(1);
+						exit(0);
 						break;
 				default:	
 						break;
@@ -169,64 +190,100 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* curs
 		{
 			switch (lastopt[0])
 			{
+				case 'C':
+				case 'c':
+						correlation->start_mindiff=atoi(argv[i]);	
+						break;
 				case 'F':	
 				case 'f':
 						snprintf(configfile,512,"%s",argv[i]);
 						break;
 				case 'S':
-				case 's':	
-						*gosearch=1;
-						search->forwardnotbackward=!(lastopt[2]=='b' || lastopt[2]=='B');
-						if (lastopt[1]=='a' || lastopt[1]=='A') 
-						{
-							memcpy(search->searchstring,argv[i],19);
-							search->searchlen=strlen(argv[i]);
-							if (search->searchlen>19) search->searchlen=19;
-						} else if (lastopt[1]=='h' || lastopt[1]=='H') {
+				case 's':
+						{	
+							tInt8	stringtype=0;	// 0=unknown, 1=ascii, 2=hex
+							tBool	forward=1;
+							tSearch* search;
+							tBool* gosearch;
 							int j;
-							int k=0;
-							int x=0;
-							search->searchlen=0;
-							for (j=0;j<strlen(argv[i]) && search->searchlen<19;j++)
+							
+							search=search1;
+							gosearch=gosearch1;
+							for (j=1;j<8 && lastopt[j];j++)
 							{
-								int y;
-								y=-1;
-								x<<=4;
-								y=(argv[i][j]>='0' && argv[i][j]<='9')?argv[i][j]-'0':y;	
-								y=(argv[i][j]>='a' && argv[i][j]<='f')?argv[i][j]-'a'+10:y;
-								y=(argv[i][j]>='A' && argv[i][j]<='F')?argv[i][j]-'A'+10:y;
-								if (y>=0) 
+								if (lastopt[j]=='a' || lastopt[j]=='A') stringtype=1;
+								if (lastopt[j]=='h' || lastopt[j]=='H') stringtype=2;
+								if (lastopt[j]=='b' || lastopt[j]=='B') forward=0;
+								if (lastopt[j]=='1')
 								{
-									x|=y;
-									if (k&1)
-									{
-										search->searchstring[search->searchlen++]=(x&0xff);
-									}
-									k++;
+									search=search1;
+									gosearch=gosearch1;
 								}
-								else if (argv[i][j]!=' ') 
+								if (lastopt[j]=='2')
 								{
-									fprintf(stderr,"illegal character in hex searchstring.\n");
-									retval=RETNOK;
+									search=search2;
+									gosearch=gosearch2;
 								}
+								
 							}
-						} else {
-							fprintf(stderr,"please select one of -sa or -sh\n");
-							retval=RETNOK;	
+							
+							*gosearch=1;
+							search->forwardnotbackward=!(lastopt[2]=='b' || lastopt[2]=='B');
+							if (stringtype==1)
+							{
+								memcpy(search->searchstring,argv[i],19);
+								search->searchlen=strlen(argv[i]);
+								if (search->searchlen>19) search->searchlen=19;
+							} else if (stringtype==2) {
+								int k=0;
+								int x=0;
+								search->searchlen=0;
+								for (j=0;j<strlen(argv[i]) && search->searchlen<19;j++)
+								{
+									int y;
+									y=-1;
+									x<<=4;
+									y=(argv[i][j]>='0' && argv[i][j]<='9')?argv[i][j]-'0':y;	
+									y=(argv[i][j]>='a' && argv[i][j]<='f')?argv[i][j]-'a'+10:y;
+									y=(argv[i][j]>='A' && argv[i][j]<='F')?argv[i][j]-'A'+10:y;
+									if (y>=0) 
+									{
+										x|=y;
+										if (k&1)
+										{
+											search->searchstring[search->searchlen++]=(x&0xff);
+										}
+										k++;
+									}
+									else if (argv[i][j]!=' ') 
+									{
+										fprintf(stderr,"illegal character in hex searchstring.\n");
+										retval=RETNOK;
+									}
+								}
+							} else {
+								fprintf(stderr,"please select one of -sa or -sh\n");
+								retval=RETNOK;	
+							}
 						}
 						break;
 				case 'r':
 				case 'R':
-						memcpy(search->readlogfilename,argv[i],64);
-						search->readsearchlog=1;
+						{
+							tSearch* search;
+							if (lastopt[1]=='2') search=search2; else search=search1;
+							memcpy(search->readlogfilename,argv[i],64);
+							search->readsearchlog=1;
+						}
 						break;
 				case 'w':
 				case 'W':
-						memcpy(search->writelogfilename,argv[i],64);
-						search->writesearchlog=1;
-						break;
-				case 'c':
-				case 'C':	printf("TODO:correlation\n");
+						{
+							tSearch* search;
+							if (lastopt[1]=='2') search=search2; else search=search1;
+							memcpy(search->writelogfilename,argv[i],64);
+							search->writesearchlog=1;
+						}
 						break;
 				case 'O':
 				case 'o':	
@@ -275,14 +332,18 @@ int main(int argc,char** argv)
 	tInt64 oldfirstpos1;
 	tInt64 oldcursorpos2;
 	tInt64 oldfirstpos2;
-	tSearch search;
+	tSearch search1;
+	tSearch search2;
 	tMarkers* markers;
-	tBool	gosearch=0;
+	tBool	gosearch1=0;
+	tBool	gosearch2=0;
+	tCorrelation correlation;
 	char	markerfilename[64];
 	
 	tUInt8	windowfield=0;	// 0=hex field buffer 1, 1=ascii field buffer 1, 2=hex field buffer 2, 3=ascii field buffer 2
 	tBool	diffmode=0;
 	tBool	keyboardsetupreq;
+	tBool	gocorr=0;
 	int	retval;
 	
 	int ch;
@@ -302,8 +363,10 @@ int main(int argc,char** argv)
 	keyboardsetupreq=0;
 	cursorpos1=0;
 	cursorpos2=0;
-	clearsearch(&search);
-	if (parsecommandlineoptions(argc,argv,&cursorpos1,&cursorpos2,&diffmode,&filename1,&filename2,&keyboardsetupreq,markerfilename,configfile,&search,&gosearch)!=RETOK)
+	clearsearch(&search1);
+	clearsearch(&search2);
+	clear_correlation(&correlation);
+	if (parsecommandlineoptions(argc,argv,&cursorpos1,&cursorpos2,&diffmode,&filename1,&filename2,&keyboardsetupreq,markerfilename,configfile,&search1,&gosearch1,&search2,&gosearch2,&correlation,&gocorr)!=RETOK)
 	{
 		if (output)
 		{
@@ -321,7 +384,7 @@ int main(int argc,char** argv)
 			fprintf(stderr,"$HOME-variable not set. \n\n");
 			fprintf(stderr,"I'm sorry, but you'll have to provide a config-file by using\n");
 			fprintf(stderr,"%s -f /PATHTOCONFIGFILE/.dhexrc\n",argv[0]);
-			exit(0);
+			exit(1);
 		} else {
 			snprintf(configfile,512,"%s/.dhexrc",homedir);
 		}
@@ -359,15 +422,15 @@ int main(int argc,char** argv)
 		fprintf(f,"HEXFIELD:       FG=WHITE,BG=BLACK\n");
 		fprintf(f,"INPUT:          FG=BLACK,BG=WHITE\n");
 		fprintf(f,"CURSOR:         FG=WHITE,BG=BLACK\n");
-		fprintf(f,"TEXT:           FG=WHITE,BG=BLACK,BOLD\n");
-		fprintf(f,"MENU_NORMAL:    FG=CYAN,BG=BLACK\n");
-		fprintf(f,"MENU_HIGHLIGHT: FG=BLACK,BG=CYAN\n");
-		fprintf(f,"MENU_HOTKEY:    FG=YELLOW,BG=BLACK,BOLD\n");
-		fprintf(f,"MENU_HOTKEY_HI: FG=YELLOW,BG=CYAN,BOLD\n");
-		fprintf(f,"FRAME:          FG=BLUE,BG=BLACK,BOLD\n");
-		fprintf(f,"NORMAL_DIFF:    FG=YELLOW,BG=BLACK\n");
+		fprintf(f,"TEXT:           FG=LIGHTCYAN,BG=BLACK,BOLD\n");
+		fprintf(f,"MENU_NORMAL:    FG=LIGHTBLUE,BG=BLACK\n");
+		fprintf(f,"MENU_HIGHLIGHT: FG=LIGHTBLUE,BG=BLUE\n");
+		fprintf(f,"MENU_HOTKEY:    FG=CYAN,BG=BLACK\n");
+		fprintf(f,"MENU_HOTKEY_HI: FG=CYAN,BG=BLUE\n");
+		fprintf(f,"FRAME:          FG=BLUE,BG=BLACK\n");
+		fprintf(f,"NORMAL_DIFF:    FG=YELLOW,BG=BLACK,BOLD\n");
 		fprintf(f,"CURSOR_DIFF:    FG=YELLOW,BG=WHITE,BOLD\n");
-		fprintf(f,"HEADLINE:       FG=BLUE,BG=BLACK,BOLD\n");
+		fprintf(f,"HEADLINE:       FG=BLUE,BG=BLACK\n");
 		fprintf(f,"	\n");
 		fclose(f);
 		retval=2;
@@ -394,8 +457,14 @@ int main(int argc,char** argv)
 		fprintf(stderr,"error opening second inputfile %s\n",argv[filename2]);
 		exit(1);
 	}
-	if (gosearch && !diffmode) searchfor(&search,buf1,&cursorpos1,1);
-	if (!gosearch || diffmode || !search.writesearchlog)
+	if (gosearch1) searchfor(&search1,buf1,&cursorpos1,1);
+	if (gosearch2 && diffmode) searchfor(&search2,buf2,&cursorpos2,1);
+	if (gocorr && diffmode)	
+	{
+		fprintf(stderr,"correlating...\n");
+		find_correlation(NULL,&correlation,buf1,buf2,&cursorpos1,&cursorpos2);
+	}
+	if (!(gosearch1 && search1.writesearchlog) || (diffmode && !(gosearch2 && search2.writesearchlog)))
 	{
 		output->win=initscr();
 		pairsinit(output);
@@ -500,9 +569,9 @@ int main(int argc,char** argv)
 			}
 			if ((ch==KEYF2 || ((ch=='/' || ch=='?') && (windowfield==0))) && !diffmode)	
 			{
-				if (ch=='/')	search.forwardnotbackward=1;	// / means forward
-				if (ch=='?')	search.forwardnotbackward=0;	// ? means backward
-				searchmask(output,&search,buf1,&cursorpos1);
+				if (ch=='/')	search1.forwardnotbackward=1;	// / means forward
+				if (ch=='?')	search1.forwardnotbackward=0;	// ? means backward
+				searchmask(output,&search1,buf1,&cursorpos1);
 				firstpos1=cursorpos1;
 			}
 			if (ch==KEYF3 || ch==KEYF4 || (windowfield==0 && (ch=='n' || ch=='N')))
@@ -554,13 +623,21 @@ int main(int argc,char** argv)
 						cursorpos2=actcursorpos2;
 					}
 				} 
-				else if (search.occurancesfound)
+				else if (search1.occurancesfound)
 				{
-					searchfor(&search,buf1,&cursorpos1,(ch==KEYF3));	// f3: next
+					searchfor(&search1,buf1,&cursorpos1,(ch==KEYF3));	// f3: next
 					firstpos1=cursorpos1;
 				}
 			}	
 			if (ch==KEYF5)	hexcalc(output,hHexCalc);
+			if (ch==KEYF6 && diffmode)
+			{
+				correlation.start_mindiff=MIN(buf1->bufsize,buf2->bufsize);
+				if (correlationmask(output,&correlation)==RETOK)
+				{
+					find_correlation(output,&correlation,buf1,buf2,&cursorpos1,&cursorpos2);
+				}
+			}
 			if ((ch==KEYF9 || (ch=='u' && windowfield==0)) && !diffmode)
 			{
 				if (buf1->changesnum) 
@@ -619,7 +696,9 @@ int main(int argc,char** argv)
 		if (output->win) endwin();
 		welcomescreen(argv[0]);
 	} else {
-		fprintf(stderr,"%lli occurances found\n",search.occurancesfound);
+		if (gosearch1) fprintf(stderr,"%lli occurances found in %s\n",search1.occurancesfound,buf1->filename);
+		if (gosearch2) fprintf(stderr,"%lli occurances found in %s\n",search2.occurancesfound,buf2->filename);
 	}
 	return 0;
 }
+

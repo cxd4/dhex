@@ -8,6 +8,7 @@
 #include "input.h"
 #include "menu.h"
 #include "search.h"
+#include "correlation.h"
 
 void searchmask(tOutput* output,tSearch* search,tBuffer* buf,tUInt64* cursorpos)
 {
@@ -138,4 +139,59 @@ tInt8 savedialog(tOutput* output,tBuffer* hBuf)
 	}	
 	return RETOK;
 }
+tInt8 correlationmask(tOutput* output,tCorrelation* correlation)
+{
+	tInt16	offsx;
+	tInt16	offsy;
+	tMenu	Menu1;
+	tInt8	itemnums[6];
+	tInt8	selected;
+	tInt8	retval=RETOK;
+	tBool	done=0;
 
+	offsx=COLS/2-21;
+	offsy=LINES/2-3;
+	drawcenterframe(output,6,42,"Correlation");
+	clearMenu(&Menu1);
+	newMenuItem(&Menu1,"best match",1,5,'B',0,&itemnums[0]);
+	newMenuItem(&Menu1,"longest match",2,5,'L',0,&itemnums[1]);
+	newMenuItem(&Menu1,"minimum difference",3,5,'D',0,&itemnums[2]);
+	newMenuItem(&Menu1,"upper diff limit",4,1,'S',0,&itemnums[2]);
+	newMenuItem(&Menu1,"Go",5,1,'G',0,&itemnums[4]);
+	newMenuItem(&Menu1,"Cancel",5,35,'C',1,&itemnums[5]);
+	selected=itemnums[0];
+	while (!done)
+	{
+		setcolor(output,COLOR_BRACKETS);
+		mvwprintw(output->win,offsy+1,offsx+1,"( )");
+		mvwprintw(output->win,offsy+2,offsx+1,"( )");
+		mvwprintw(output->win,offsy+3,offsx+1,"( )");
+		mvwprintw(output->win,offsy+4,offsx+22,"[                 ]");
+		setcolor(output,COLOR_TEXT);
+		switch(correlation->algorithm)
+		{
+			case CORR_BEST_MATCH:		mvwprintw(output->win,offsy+1,offsx+2,"o");break;
+			case CORR_LONGEST_MATCH:	mvwprintw(output->win,offsy+2,offsx+2,"o");break;
+			case CORR_MIN_DIFF:		mvwprintw(output->win,offsy+3,offsx+2,"o");break;
+		}
+		mvwprintw(output->win,offsy+4,offsx+23,"%17lli",correlation->start_mindiff);
+		selected=MenuInteract(output,&Menu1,offsy,offsx);
+		if (selected==itemnums[0])
+		{
+			correlation->algorithm=CORR_BEST_MATCH;
+		} else if (selected==itemnums[1]) {
+			correlation->algorithm=CORR_LONGEST_MATCH;
+		} else if (selected==itemnums[2]) {
+			correlation->algorithm=CORR_MIN_DIFF;
+		} else if (selected==itemnums[3]) {
+			decinput(output,offsy+4,offsx+22,&correlation->start_mindiff,18);
+		} else if (selected==itemnums[4]) {
+			done=1;
+			retval=RETOK;
+		} else if (selected==itemnums[5]) {
+			done=1;
+			retval=RETNOK;
+		}
+	}
+	return retval;
+}

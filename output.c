@@ -234,6 +234,7 @@ void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursor
 		mvwprintw(output->win,0,19,"%16llX",hBuf1->bufsize);
 		mvwprintw(output->win,LINES/2,2,"%16llX",cursorpos1);
 		mvwprintw(output->win,LINES/2,19,"%16llX",hBuf1->bufsize);
+		
 	} else {
 		mvwprintw(output->win,0,1,"[        /        ]");
 		mvwprintw(output->win,LINES/2,1,"[        /        ]");
@@ -424,7 +425,7 @@ void printmainmenu(tOutput* output,tBool diffmode)
 "Next  ",	// F3
 "Prev  ",	// F4
 "HexCal",	// F5
-"      ",	// F6
+"Corr. ",	// F6
 "      ",	// F7
 "      ",	// F8
 "       ",	// F9

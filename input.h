@@ -5,6 +5,7 @@
 #include "machine_type.h"
 #include "output.h"
 #include <ncurses.h>
+#include "datatypes.h"
 
 #define KEYF1           0x0100
 #define KEYF2           0x0101
@@ -32,20 +33,10 @@
 
 #define NUM_SPECIALKEYS	0x17
 
-// this is for the special keys
-// i was not satisfied with how ncurses handled the function keys
-typedef struct  _tKeyTab
-{
-        tInt16	retval;
-        tBool	allowed_in_inputfield;
-        tUInt8	seqlen;
-        char seq[8];		// which sequence will be returned when this key is pressed
-        char config[16];	// what string is written in the config-file
-	char desc[64];
-} tKeyTab;
 
 void initkeytab(tOutput* output);
 tInt16 getkey(tKeyTab* pKeyTab,tBool inputfield);
+tInt16 decinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,tInt16 len);
 tInt16 hexinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,char* relative,tInt16 len);
 tInt16 hexinput2(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16* usedlen,tInt16 len);
 tInt16 stringinput(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16 len);

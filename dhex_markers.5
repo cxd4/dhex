@@ -13,7 +13,6 @@ Bookmarks for
 are stored in marker files. This manpage describes the format of those marker files.
 .Ss EXAMPLE
 A typical marker file looks like this:
-
 .
 .br
 .Ql #DHEX MARKERS
@@ -51,8 +50,8 @@ In the example above, the file has two sections: A comment section, and a bookma
 .Ss Comments
 Comments are indicated with a '#' character. Everything afterwards in a line is being ignored when parsing the file
 .Ss Bookmark section
-Bookmarks can be either absolute, or relative. Lines with absolute bookmarks are starting with '=', the relative ones are starting with '+' or '-'. The value afterwards is a 64 bit hexadecimal one. 
-
+Bookmarks can be either absolute or relative. Lines with absolute bookmarks are starting with '=', the relative ones with '+' or '-'. The value is a 64 bit hexadecimal one. 
+.Pp
 There should always be 10 bookmarks per file.
 .Sh BUGS
 Report bugs to 
@@ -63,5 +62,5 @@ Written by
 .An Thomas Dettbarn
 .Sh SEE ALSO
 .Xr dhex 1 ,
-.Xr dhex_rc 5 ,
+.Xr dhexrc 5 ,
 .Xr dhex_searchlog 5 .
