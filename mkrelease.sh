@@ -1,4 +1,4 @@
-mkdir dhex_0.60
+mkdir dhex_0.61
 cp \
 Makefile \
 buffers.c \
@@ -27,7 +27,7 @@ ui.h \
 README.txt \
 todo.txt \
 mkrelease.sh \
-dhex_0.60/
-( cd dhex_0.60/ && make && make clean && cd .. && \
-tar cvfz dhex_0.60.tar.gz dhex_0.60/ )
-md5 dhex_0.60.tar.gz
+dhex_0.61/
+( cd dhex_0.61/ && make && make clean && cd .. && \
+tar cvfz dhex_0.61.tar.gz dhex_0.61/ )
+md5 dhex_0.61.tar.gz

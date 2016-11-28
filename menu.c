@@ -1,4 +1,8 @@
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <strings.h>
+#include <string.h>
+#include "machine_type.h"
 #include "menu.h"
 #include "output.h"
 #include "input.h"
@@ -20,22 +24,22 @@ void newMenuItem(tMenu* Menu,char* text,tUInt16 y,tUInt16 x,char hotkey,tBool ac
 	*itemnum=Menu->menuitemnum;
 	Menu->menuitemnum++;
 }
-void printMenu(WINDOW* win,tMenu* Menu,tUInt16 offsy,tUInt16 offsx)
+void printMenu(tOutput* output,tMenu* Menu,tUInt16 offsy,tUInt16 offsx)
 {
 	int i;
 	int j;
 	for (i=0;i<Menu->menuitemnum;i++)
 	{
-		setcolor(win,(i==Menu->menuitemactive)?COLOR_MENUACTIVE:COLOR_MENUNORMAL);
-		mvwprintw(win,offsy+Menu->MenuItems[i].y,offsx+Menu->MenuItems[i].x,"%s",Menu->MenuItems[i].menutext);
+		setcolor(output,(i==Menu->menuitemactive)?COLOR_MENUACTIVE:COLOR_MENUNORMAL);
+		mvwprintw(output->win,offsy+Menu->MenuItems[i].y,offsx+Menu->MenuItems[i].x,"%s",Menu->MenuItems[i].menutext);
 		if (Menu->MenuItems[i].hotkey)
 		{
 			for (j=0;j<strlen(Menu->MenuItems[i].menutext);j++)
 			{
 				if (Menu->MenuItems[i].menutext[j]==Menu->MenuItems[i].hotkey || (Menu->MenuItems[i].hotkey>='A' && Menu->MenuItems[i].hotkey<='Z' && Menu->MenuItems[i].menutext[j]-32==Menu->MenuItems[i].hotkey))
 				{
-					setcolor(win,(i==Menu->menuitemactive)?COLOR_MENUHOTKEYACTIVE:COLOR_MENUHOTKEY);
-					mvwprintw(win,offsy+Menu->MenuItems[i].y,offsx+Menu->MenuItems[i].x,"%c",Menu->MenuItems[i].menutext[j]);
+					setcolor(output,(i==Menu->menuitemactive)?COLOR_MENUHOTKEYACTIVE:COLOR_MENUHOTKEY);
+					mvwprintw(output->win,offsy+Menu->MenuItems[i].y,offsx+Menu->MenuItems[i].x,"%c",Menu->MenuItems[i].menutext[j]);
 					j=65;
 				}
 			}
@@ -211,17 +215,17 @@ void MenuSetActiveItem(tMenu* Menu,tInt8 itemnum)
 {
 	Menu->menuitemactive=itemnum;
 }
-tInt8 MenuInteract(WINDOW* win,tMenu* Menu,tInt16 offsy,tInt16 offsx)
+tInt8 MenuInteract(tOutput* output,tMenu* Menu,tInt16 offsy,tInt16 offsx)
 {
 	tInt16	ch;
 	int	i;
 	tInt8	retval;
 
 	ch=0;
-	printMenu(win,Menu,offsy,offsx);
+	printMenu(output,Menu,offsy,offsx);
 	while (ch!=KEYENTER)
 	{
-		ch=getkey(0);
+		ch=getkey((tKeyTab*)output->pKeyTab,0);
 		switch(ch)
 		{
 			case	KEYLEFT:	MenuMoveLeft(Menu);						break;
@@ -245,7 +249,7 @@ tInt8 MenuInteract(WINDOW* win,tMenu* Menu,tInt16 offsy,tInt16 offsx)
 				}
 			break;
 		}
-		printMenu(win,Menu,offsy,offsx);
+		printMenu(output,Menu,offsy,offsx);
 	}
-	retval=Menu->menuitemactive;
+	return Menu->menuitemactive;
 }

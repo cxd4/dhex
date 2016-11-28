@@ -22,6 +22,8 @@ tUInt64	getfilepos(tFptr f);
 tUInt64 getfilesize(tFptr f);
 void	setfilepos(tFptr f,tUInt64 pos);
 
+#define	MIN(a,b)	(((a)<(b))?(a):(b))
+#define	MAX(a,b)	(((a)>(b))?(a):(b))
 #define	RETOK	0
 #define	RETNOK	-1
 #endif

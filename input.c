@@ -1,40 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 #include "machine_type.h"
 #include "input.h"
 #include "output.h"
 
-#if 0	 //openbsd/linux
-tKeyTab KeyTab[]={
-	// key return value (retval),allowed_in_inputfield,seqlen,seq[8],config[16]
-        {KEYF1,         0,5,{0x1b,0x5b,0x31,0x31,0x7e,0x00,0x00,0x00},"KEYF1:"},
-        {KEYF2,         0,5,{0x1b,0x5b,0x31,0x32,0x7e,0x00,0x00,0x00},"KEYF2:"},
-        {KEYF3,         0,5,{0x1b,0x5b,0x31,0x33,0x7e,0x00,0x00,0x00},"KEYF3:"},
-        {KEYF4,         0,5,{0x1b,0x5b,0x31,0x34,0x7e,0x00,0x00,0x00},"KEYF4:"},
-        {KEYF5,         0,5,{0x1b,0x5b,0x31,0x35,0x7e,0x00,0x00,0x00},"KEYF5:"},
-        {KEYF6,         0,5,{0x1b,0x5b,0x31,0x36,0x7e,0x00,0x00,0x00},"KEYF6:"},
-        {KEYF7,         0,5,{0x1b,0x5b,0x31,0x37,0x7e,0x00,0x00,0x00},"KEYF7:"},
-        {KEYF8,         0,5,{0x1b,0x5b,0x31,0x38,0x7e,0x00,0x00,0x00},"KEYF8:"},
-        {KEYF9,         0,5,{0x1b,0x5b,0x32,0x30,0x7e,0x00,0x00,0x00},"KEYF9:"},
-        {KEYF10,        0,5,{0x1b,0x5b,0x32,0x31,0x7e,0x00,0x00,0x00},"KEYF10:"},
-        {KEYESC,        1,1,{0x1b,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYESC:"},
-        {KEYBACKSPACE,  1,1,{0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYBACKSPACE:"},
-        {KEYDEL,        1,1,{0x7f,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYDEL:"},
-        {KEYENTER,      1,1,{0x0a,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYENTER:"},
-        {KEYTAB,        1,1,{0x09,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYTAB:"},
-        {KEYUP,         0,3,{0x1b,0x5b,0x41,0x00,0x00,0x00,0x00,0x00},"KEYUP:"},
-        {KEYDOWN,       0,3,{0x1b,0x5b,0x42,0x00,0x00,0x00,0x00,0x00},"KEYDOWN:"},
-        {KEYRIGHT,      0,3,{0x1b,0x5b,0x43,0x00,0x00,0x00,0x00,0x00},"KEYRIGHT:"},
-        {KEYLEFT,       0,3,{0x1b,0x5b,0x44,0x00,0x00,0x00,0x00,0x00},"KEYLEFT:"},
-        {KEYPGUP,       0,4,{0x1b,0x5b,0x35,0x7e,0x00,0x00,0x00,0x00},"KEYPGUP:"},
-        {KEYPGDOWN,     0,4,{0x1b,0x5b,0x36,0x7e,0x00,0x00,0x00,0x00},"KEYPGDOWN:"},
-        {KEYHOME,       0,4,{0x1b,0x5b,0x37,0x7e,0x00,0x00,0x00,0x00},"KEYHOME:"},
-        {KEYEND,        0,4,{0x1b,0x5b,0x38,0x7e,0x00,0x00,0x00,0x00},"KEYEND:"}
-};
-#endif
-
-#if 1	// mac os x
-tKeyTab KeyTab[]={
+void initkeytab(tOutput* output)
+{
+	// those values are for mac os x
+	const tKeyTab KeyTab[NUM_SPECIALKEYS]={
 	// key return value (retval),allowed_in_inputfield,seqlen,seq[8],config[16]
         {KEYF1,         0,2,{0xc2,0xa1,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF1:"},
         {KEYF2,         0,3,{0xe2,0x84,0xa2,0x00,0x00,0x00,0x00,0x00},"KEYF2:"},
@@ -60,43 +35,69 @@ tKeyTab KeyTab[]={
         {KEYHOME,       0,0,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYHOME:"},
         {KEYEND,        0,0,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYEND:"}
 };
-#endif
-
-tInt16 getkey(tBool inputfield)		// =1 this is an inputfield. which means that certain allowed_in_inputfields may not be used
+	if (output->pKeyTab) free(output->pKeyTab);
+	output->pKeyTab=malloc(sizeof(tKeyTab)*NUM_SPECIALKEYS);
+	memcpy(output->pKeyTab,KeyTab,sizeof(tKeyTab)*NUM_SPECIALKEYS);
+}
+tInt16 getkey(tKeyTab* pKeyTab,tBool inputfield)		// =1 this is an inputfield. which means that certain allowed_in_inputfields may not be used
 {
 	tInt16 ch;
 	unsigned char seq[8];
 	tUInt8 seqlen=0;
-	tBool done;
+	tBool	done;
+	tInt16 donecnt;
 	tInt16 lastch=ERR;
+	tBool	partial;
+	tBool	exact;
 	int i,j;
 
+	donecnt=1000;	
 	done=0;
+	partial=0;
+	exact=0;
 	while (!done)
 	{
-		ch=getch();
+		while (!done)
+		{
+			ch=getch();
 
-		if (lastch!=ERR && ch==ERR || seqlen==8) done=1;
-		if (ch!=ERR)
-		{
-			if (seqlen<8) seq[seqlen++]=ch;
-			lastch=ch;
+			if (lastch!=ERR && ch==ERR || seqlen==8) done=1;
+			if (ch!=ERR)
+			{
+				if (seqlen<8) seq[seqlen++]=ch;
+				lastch=ch;
+				done=1;	// a key was pressed
+			} else {
+				usleep(1);
+				donecnt=donecnt-partial;
+				done=!donecnt;
+			}
 		}
-	}
-	for (i=0;i<NUM_SPECIALKEYS;i++)	// check if it was a special key
-	{
-		if (KeyTab[i].seqlen==seqlen)
+		exact=0;
+		partial=0;
+		for (i=0;i<NUM_SPECIALKEYS;i++)	// check if it was a special key
 		{
-			j=memcmp(KeyTab[i].seq,seq,seqlen);
-			if (j==0) lastch=KeyTab[i].retval;	// in an inputfield, certain special keys have to be disabled
-			
-		}	
+			if (pKeyTab[i].seqlen==seqlen)
+			{
+				j=memcmp(pKeyTab[i].seq,seq,seqlen);
+				if (j==0) 
+				{
+					lastch=pKeyTab[i].retval;	// in an inputfield, certain special keys have to be disabled
+					exact=1;
+				}
+			} else if (pKeyTab[i].seqlen>seqlen) {
+				j=memcmp(pKeyTab[i].seq,seq,seqlen);
+				if (j==0) partial=1;
+			}
+		}
+		if (exact && (!partial || !donecnt)) done=1;
+		else if (partial && donecnt) done=0;
 	}
 	return lastch;
 }
 
 
-tInt16 hexinput(WINDOW* win,tInt16 y,tInt16 x,tUInt64* val,tInt16 len)
+tInt16 hexinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,tInt16 len)
 {
 	tInt8	e=0;
 	tInt16 i;
@@ -106,26 +107,26 @@ tInt16 hexinput(WINDOW* win,tInt16 y,tInt16 x,tUInt64* val,tInt16 len)
 	tUInt64	t;
 
 	newval=*val;
-	setcolor(win,COLOR_BRACKETS);
-	mvwprintw(win,y,x,"[");
-	mvwprintw(win,y,x+len+1,"]");
+	setcolor(output,COLOR_BRACKETS);
+	mvwprintw(output->win,y,x,"[");
+	mvwprintw(output->win,y,x+len+1,"]");
 	while (!done)
 	{
-		setcolor(win,COLOR_BRACKETS);
-		for (i=0;i<len;i++) mvwprintw(win,y,x+i+1," ");
-		setcolor(win,COLOR_INPUT);
+		setcolor(output,COLOR_BRACKETS);
+		for (i=0;i<len;i++) mvwprintw(output->win,y,x+i+1," ");
+		setcolor(output,COLOR_INPUT);
 		t=newval;
 		for (i=len-2;i>=0 && t;i--)
 		{
 			tUInt8	c=t&0xf;
 			t>>=4;
-			mvwprintw(win,y,x+i+2,"%1x",c);
+			mvwprintw(output->win,y,x+i+2,"%1x",c);
 		}
-		if (e==0) mvwprintw(win,y,x+i+2,"=");
-		if (e==1) mvwprintw(win,y,x+i+2,"-");
-		if (e==2) mvwprintw(win,y,x+i+2,"+");
+		if (e==0) mvwprintw(output->win,y,x+i+2,"=");
+		if (e==1) mvwprintw(output->win,y,x+i+2,"-");
+		if (e==2) mvwprintw(output->win,y,x+i+2,"+");
 		refresh();
-		ch=getkey(1);
+		ch=getkey(output->pKeyTab,1);
 		if (ch=='=') e=0;
 		if (ch=='-') e=1;
 		if (ch=='+') e=2;
@@ -157,7 +158,7 @@ tInt16 hexinput(WINDOW* win,tInt16 y,tInt16 x,tUInt64* val,tInt16 len)
 	}
 	return ch;
 }
-tInt16 hexinput2(WINDOW* win,tInt16 y,tInt16 x,char* s,tInt16* usedlen,tInt16 len)
+tInt16 hexinput2(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16* usedlen,tInt16 len)
 {
 	char* buf;
 	tInt16	ch;
@@ -171,21 +172,21 @@ tInt16 hexinput2(WINDOW* win,tInt16 y,tInt16 x,char* s,tInt16* usedlen,tInt16 le
 	memcpy(buf,s,len);
 	newusedlen=*usedlen;
 
-	setcolor(win,COLOR_BRACKETS);
-	mvwprintw(win,y,x,"[");
-	mvwprintw(win,y,x+len*3,"]");
+	setcolor(output,COLOR_BRACKETS);
+	mvwprintw(output->win,y,x,"[");
+	mvwprintw(output->win,y,x+len*3,"]");
 	while (!done)
 	{
-		setcolor(win,COLOR_INPUT);
+		setcolor(output,COLOR_INPUT);
 		for (i=0;i<len;i++)
 		{
-			if (i<newusedlen) mvwprintw(win,y,x+1+i*3,"%02x",((tUInt16)buf[i]&0xff));
-			else if (i==newusedlen && nibble) mvwprintw(win,y,x+1+i*3,"%1x ",newchar&0xf);
-			else mvwprintw(win,y,x+1+i*3,"  ");
-			if (i!=(len-1)) mvwprintw(win,y,x+3+i*3," ");
+			if (i<newusedlen) mvwprintw(output->win,y,x+1+i*3,"%02x",((tUInt16)buf[i]&0xff));
+			else if (i==newusedlen && nibble) mvwprintw(output->win,y,x+1+i*3,"%1x ",newchar&0xf);
+			else mvwprintw(output->win,y,x+1+i*3,"  ");
+			if (i!=(len-1)) mvwprintw(output->win,y,x+3+i*3," ");
 		}
-		wmove(win,y,x+1+newusedlen*3+nibble);
-		ch=getkey(1);
+		wmove(output->win,y,x+1+newusedlen*3+nibble);
+		ch=getkey(output->pKeyTab,1);
 		if (ch>='a' && ch<='z') ch-=32;
 		if (newusedlen<len && ((ch>='0' && ch<='9') || (ch>='A' && ch<='F')))
 		{
@@ -209,18 +210,18 @@ tInt16 hexinput2(WINDOW* win,tInt16 y,tInt16 x,char* s,tInt16* usedlen,tInt16 le
 		*usedlen=newusedlen;
 	}
 	free(buf);
-	setcolor(win,COLOR_TEXT);
+	setcolor(output,COLOR_TEXT);
 	newusedlen=*usedlen;
 	for (i=0;i<len;i++)
 	{
-		if (i<newusedlen) mvwprintw(win,y,x+1+i*3,"%02x",((tUInt16)buf[i]&0xff));
-		else if (i==newusedlen && nibble) mvwprintw(win,y,x+1+i*3,"%1x ",newchar&0xf);
-		else mvwprintw(win,y,x+1+i*3,"  ");
-		if (i!=(len-1)) mvwprintw(win,y,x+3+i*3," ");
+		if (i<newusedlen) mvwprintw(output->win,y,x+1+i*3,"%02x",((tUInt16)buf[i]&0xff));
+		else if (i==newusedlen && nibble) mvwprintw(output->win,y,x+1+i*3,"%1x ",newchar&0xf);
+		else mvwprintw(output->win,y,x+1+i*3,"  ");
+		if (i!=(len-1)) mvwprintw(output->win,y,x+3+i*3," ");
 	}
 	return ch;
 }
-tInt16 stringinput(WINDOW* win,tInt16 y,tInt16 x,char* s,tInt16 len)
+tInt16 stringinput(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16 len)
 {
 	tInt16 i;
 	tInt16 cursorpos;
@@ -234,25 +235,25 @@ tInt16 stringinput(WINDOW* win,tInt16 y,tInt16 x,char* s,tInt16 len)
 	
 
 	cursorpos=strlen(s);
-	setcolor(win,COLOR_BRACKETS);
-	mvwprintw(win,y,x,"[");
-	mvwprintw(win,y,x+len+1,"]");
+	setcolor(output,COLOR_BRACKETS);
+	mvwprintw(output->win,y,x,"[");
+	mvwprintw(output->win,y,x+len+1,"]");
 	while (!done)
 	{
-		setcolor(win,COLOR_INPUT);
+		setcolor(output,COLOR_INPUT);
 		for (i=0;i<len;i++)
 		{
-			mvwprintw(win,y,x+i+1,"%c",(i<strlen(buf))?buf[i]:'_');
+			mvwprintw(output->win,y,x+i+1,"%c",(i<strlen(buf))?buf[i]:'_');
 		}
 
 		if (cursorpos<len)
 		{
-			setcolor(win,COLOR_CURSOR);
-			mvwprintw(win,y,x+cursorpos+1,"%c",(cursorpos<strlen(buf))?buf[cursorpos]:'_');
+			setcolor(output,COLOR_CURSOR);
+			mvwprintw(output->win,y,x+cursorpos+1,"%c",(cursorpos<strlen(buf))?buf[cursorpos]:'_');
 		}
 		move(y,x+cursorpos+1);
 		refresh();
-		ch=getkey(1);
+		ch=getkey(output->pKeyTab,1);
 		if (ch==KEYENTER) done=1;
 		if (ch==KEYTAB) done=1;
 		if (ch==KEYESC) done=1;
@@ -271,14 +272,14 @@ tInt16 stringinput(WINDOW* win,tInt16 y,tInt16 x,char* s,tInt16 len)
 	}
 	if (ch!=KEYESC) memcpy(s,buf,len);
 	free(buf);
-	setcolor(win,COLOR_TEXT);
+	setcolor(output,COLOR_TEXT);
 	for (i=0;i<len;i++)
 	{
-		mvwprintw(win,y,x+i+1,"%c",(i<strlen(s))?s[i]:' ');
+		mvwprintw(output->win,y,x+i+1,"%c",(i<strlen(s))?s[i]:' ');
 	}
 	return ch;
 }
-int	configkeytab(char* line)
+int	configkeytab(tKeyTab* pKeyTab,char* line)
 {
 	int i;
 	int j;
@@ -288,19 +289,19 @@ int	configkeytab(char* line)
 	
 	for (i=0;i<NUM_SPECIALKEYS;i++)
 	{
-		if (strncmp(KeyTab[i].config,line,strlen(KeyTab[i].config))==0)
+		if (strncmp(pKeyTab[i].config,line,strlen(pKeyTab[i].config))==0)
 		{
 			retval=0;
 			x=1;
-			KeyTab[i].seqlen=0;
-			for (j=strlen(KeyTab[i].config);j<strlen(line);j++)
+			pKeyTab[i].seqlen=0;
+			for (j=strlen(pKeyTab[i].config);j<strlen(line);j++)
 			{
 				x<<=4;
 				if (line[j]>='0' && line[j]<='9') x|=(line[j]-'0');
 				if (line[j]>='A' && line[j]<='F') x|=(line[j]-'A'+10);
 				if (x&0x100)
 				{
-					KeyTab[i].seq[KeyTab[i].seqlen++]=(x&0xff);
+					pKeyTab[i].seq[pKeyTab[i].seqlen++]=(x&0xff);
 					x=1;
 				}
 			}
@@ -309,7 +310,7 @@ int	configkeytab(char* line)
 	}
 	return retval;
 }
-int writeconfigfile(char* configfilename)
+int writeconfigfile(tOutput* output,char* configfilename)
 {
 	tFptr f;
 	char tmpbuf[65536];
@@ -320,6 +321,7 @@ int writeconfigfile(char* configfilename)
 	int lineupcaseidx;
 	int i,j,size;
 	tBool found;
+	tKeyTab* pKeyTab=(tKeyTab*)output->pKeyTab;
 	
 	f=fopen(configfilename,"rb");
 	if (!f) return RETNOK;
@@ -350,7 +352,7 @@ int writeconfigfile(char* configfilename)
 			found=0;
 			for (j=0;j<NUM_SPECIALKEYS;j++)
 			{
-				if (strncmp(KeyTab[j].config,lineupcase,strlen(KeyTab[j].config))==0) 
+				if (strncmp(pKeyTab[j].config,lineupcase,strlen(pKeyTab[j].config))==0) 
 				{
 					found=1;
 				}
@@ -363,16 +365,16 @@ int writeconfigfile(char* configfilename)
 	}
 	for (i=0;i<NUM_SPECIALKEYS;i++)
 	{
-		fprintf(f,"%s",KeyTab[i].config);
-		for (j=0;j<KeyTab[i].seqlen;j++)
+		fprintf(f,"%s",pKeyTab[i].config);
+		for (j=0;j<pKeyTab[i].seqlen;j++)
 		{
-			fprintf(f,"%02x ",KeyTab[i].seq[j]);
+			fprintf(f,"%02x ",pKeyTab[i].seq[j]);
 		}
 		fprintf(f,"\n");
 	}
 	fclose(f);
 }
-void keyboardsetup(WINDOW* win,char* configfilename)
+void keyboardsetup(tOutput* output,char* configfilename)
 {
 	int i,j;
 	int ch=0;
@@ -381,17 +383,19 @@ void keyboardsetup(WINDOW* win,char* configfilename)
 	unsigned char seq[8];
 	unsigned int seqlen;
 	tBool done;
-	mvwprintw(win,0,0,"Please press the following keys");
-	mvwprintw(win,1,0,"(Press ESC if your keyboard does not have them)");
-	mvwprintw(win,3,0,"Config file:%s",configfilename);
+	tKeyTab* pKeyTab=(tKeyTab*)output->pKeyTab;
+
+	mvwprintw(output->win,0,0,"Please press the following keys");
+	mvwprintw(output->win,1,0,"(Press ESC if your keyboard does not have them)");
+	mvwprintw(output->win,3,0,"Config file:%s",configfilename);
 	for (i=0;i<NUM_SPECIALKEYS;i++)
 	{
 		lastkey=-1;
 		done=0;
 		seqlen=0;
 		memset(seq,0,sizeof(seq));
-		if (i<12) mvwprintw(win,5+i,0,"%s",KeyTab[i].config);
-		else mvwprintw(win,i-7,40,"%s",KeyTab[i].config);
+		if (i<12) mvwprintw(output->win,5+i,0,"%s",pKeyTab[i].config);
+		else mvwprintw(output->win,i-7,40,"%s",pKeyTab[i].config);
 		while (!done)
 		{	
 			ch=getch();
@@ -399,34 +403,34 @@ void keyboardsetup(WINDOW* win,char* configfilename)
 			if (ch!=-1 && seqlen<8) seq[seqlen++]=ch;
 			lastkey=ch;
 		}
-		KeyTab[i].seqlen=seqlen;
-		memcpy(KeyTab[i].seq,seq,seqlen);
-		if (KeyTab[i].retval==KEYESC) keyesc=i;
+		pKeyTab[i].seqlen=seqlen;
+		memcpy(pKeyTab[i].seq,seq,seqlen);
+		if (pKeyTab[i].retval==KEYESC) keyesc=i;
 		for (j=0;j<seqlen;j++)
 		{
-			if (i<12) mvwprintw(win,5+i,15+j*3,"%02x",seq[j]);
-			else mvwprintw(win,i-7,55+j*3,"%02x",seq[j]);
+			if (i<12) mvwprintw(output->win,5+i,15+j*3,"%02x",seq[j]);
+			else mvwprintw(output->win,i-7,55+j*3,"%02x",seq[j]);
 		}
 		if (seqlen==1 && seq[0]>=32 && seq[0]<127)
 		{
-			mvwprintw(win,(i<12)?(5+i):(i-7),(i<12)?0:40,"%s(*)",KeyTab[i].config);
-			mvwprintw(win,20,0,"WARNING: Keystrokes with (*) cannot be used in an input field\n");
+			mvwprintw(output->win,(i<12)?(5+i):(i-7),(i<12)?0:40,"%s(*)",pKeyTab[i].config);
+			mvwprintw(output->win,20,0,"WARNING: Keystrokes with (*) cannot be used in an input field\n");
 		}
 	}
 	for (i=0;i<NUM_SPECIALKEYS;i++)
 	{
-		if (memcmp(KeyTab[i].seq,KeyTab[keyesc].seq,8)==0 && i!=keyesc) KeyTab[i].seqlen=0;
+		if (memcmp(pKeyTab[i].seq,pKeyTab[keyesc].seq,8)==0 && i!=keyesc) pKeyTab[i].seqlen=0;
 	}
-	mvwprintw(win,21,0,"Would you like me to write this into the config file? (Y/N)");
+	mvwprintw(output->win,21,0,"Would you like me to write this into the config file? (Y/N)");
 	done=0;
 	while (!done)
 	{
-		ch=getkey(1);
+		ch=getch();
 		if (ch=='n' || ch=='N') done=1;
-		if (ch=='y' || ch=='Y')
+		else if (ch=='y' || ch=='Y')
 		{
-			writeconfigfile(configfilename);
+			writeconfigfile(output,configfilename);
 			done=1;
-		}
+		} else usleep(1);
 	}
 }

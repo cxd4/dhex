@@ -14,15 +14,15 @@ typedef	struct	_tChange
 
 typedef struct _tBuffer
 {
-	tBool	valid;		
-	tUInt8* dataptr;	// the pointer to where the buffer data is stored
+	tBool	valid;
+	tUInt8	data[BUFFERSIZE];
 	tUInt64 filesize;	// the size of the actual file
 	tUInt64 bufsize;	// the size of the buffer, in case some bytes are added at the end
 	tUInt64 bufferpos;	// the offset from where this chunk has been read
 	tBool	fresh;		// =1 if there is no data in this buffer
 	tFptr	file;		// the file pointer
 	char	filename[512];	// the file name
-	tChange* changes;	
+	tChange	changes[CHANGEBUFSIZE];
 	tUInt32	changesnum;	// number of changes
 	tBool	nibble;
 	tUInt8	nexthex;

@@ -1,32 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
+#include <string.h>
 #include "machine_type.h"
 #include "config.h"
 #include "buffers.h"
 
 
 
-tUInt8 buffer1[BUFFERSIZE];
-tUInt8 buffer2[BUFFERSIZE];
-tChange changes1[CHANGEBUFSIZE];
-tChange changes2[CHANGEBUFSIZE];
 
 // retval: OK
 // 
 tUInt32 openbuf(tBuffer* hBuf,tUInt8 bufnum,char* filename)
 {
-	tBuffer* pBuf;
-	switch (bufnum)
-	{
-		case 1:
-			hBuf->dataptr=&buffer1[0];
-			hBuf->changes=&changes1[0];
-			break;
-		case 2:
-			hBuf->dataptr=&buffer2[0];
-			hBuf->changes=&changes2[0];
-			break;
-	}
 	hBuf->changesnum=0;
 	hBuf->valid=0;
 	hBuf->fresh=1;
@@ -68,13 +54,13 @@ tUInt32 readbuf(tBuffer* hBuf,tInt64 pos)
 		if (hBuf->filesize>hBuf->bufferpos)
 		{
 			setfilepos(hBuf->file,hBuf->bufferpos);
-			bytesread=fread(hBuf->dataptr,sizeof(tUInt8),BUFFERSIZE,hBuf->file);
+			bytesread=fread(hBuf->data,sizeof(tUInt8),BUFFERSIZE,hBuf->file);
 			if (bytesread!=BUFFERSIZE)
 			{
-				memset(&hBuf->dataptr[bytesread],0,sizeof(tUInt8)*(BUFFERSIZE-bytesread));	// fill the rest with 0
+				memset(&hBuf->data[bytesread],0,sizeof(tUInt8)*(BUFFERSIZE-bytesread));	// fill the rest with 0
 			}
 		} else {
-			memset(hBuf->dataptr,0,sizeof(tUInt8)*BUFFERSIZE);
+			memset(hBuf->data,0,sizeof(tUInt8)*BUFFERSIZE);
 		}
 	}
 	// TODO: apply the changes here

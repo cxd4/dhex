@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "machine_type.h"
+#include "output.h"
+#include <ncurses.h>
 
 #define KEYF1           0x0100
 #define KEYF2           0x0101
@@ -41,10 +43,10 @@ typedef struct  _tKeyTab
         unsigned char config[16];	// what string is written in the config-file
 } tKeyTab;
 
-tInt16 getkey(tBool inputfield);
-tInt16 hexinput(WINDOW* win,tInt16 y,tInt16 x,tUInt64* val,tInt16 len);
-tInt16 stringinput(WINDOW* win,tInt16 y,tInt16 x,char* s,tInt16 len);
-int configkeytab(char* line);
-void keyboardsetup(WINDOW* win,char* configfilename);
+tInt16 getkey(tKeyTab* pKeyTab,tBool inputfield);
+tInt16 hexinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,tInt16 len);
+tInt16 stringinput(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16 len);
+int configkeytab(tKeyTab* pKeyTab,char* line);
+void keyboardsetup(tOutput* output,char* configfilename);
 
 #endif

@@ -1,8 +1,7 @@
+- colors from the configfile
 - write the documentation
-- diff mode: offsets
 - error: when searching, the changes are being ignored
 - feature: markers
 - feature: correlation
-- get rid of the global variables, malloc() them
 - feature: snapshot
 - the length of input fields is restricted by the gui

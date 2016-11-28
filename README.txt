@@ -1,6 +1,6 @@
 -----------------------------------------------------------------[ 0. Welcome ]-
 
-Thank you for downloading dhex 0.60. It is a hex editor with a diff mode.
+Thank you for downloading dhex 0.61. It is a hex editor with a diff mode.
 Since it is based on ncurses, it runs in any console.
 It makes heavy use of colors, but it is themeable to run on monochrome-displays
 as well.
@@ -10,6 +10,10 @@ me under dettus@dettus.net. Be sure to include "DHEX" somewhere in the subject.
 
 
 Thomas Dettbarn, 30-Dec-2010
+
+0.60: Initial release
+0.61: Some code cleanup, rudementary manual correlation is possible through 
+      commandline parameters
 
 ---------------------------------------------------------[ 1. Getting started ]-
 
@@ -151,8 +155,29 @@ F1..F10) You can edit it with any texteditor you like.
 
 
 
+--------------------------------------[ 7. Correlating two files in diff mode ]-
 
---------------------------------------------------------------[ 7. Disclaimer ]-
+Lets assume you would like to compare two files. One of those files starts with
+garbage at the beginning:
+
+  file1: GARBAGE0123456789ABCDEF
+  file2:        0123456789ABCDEF
+
+GARBAGE has 7 letters, so to skip over the first 7 bytes in the first file, just
+apply the following paramters:
+
+% dhex -o1d 7 file1 file2
+
+-o sets the cursor offset. -o1 means that the first buffer is affected. -o1d 
+gives the radix for the offset. it can either be -o1d for decimal, -o1b for
+binary, -o1h for hexadecimal or -o1o for octal.
+
+If the garbage is in the second file, just use
+
+% dhex -o2d 7 file1 file2
+
+
+--------------------------------------------------------------[ 8. Disclaimer ]-
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -169,16 +194,16 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
---------------------------------------------------------------[ 8. Known bugs ]-
+--------------------------------------------------------------[ 9. Known bugs ]-
 
+- some colors are not being read properly from the config file
 - Searching has not been thourughly tested.
-- Hex output in diff mode is very slow
 - Code is not clean (yet)
 - Searching is only possible in normal mode, not diff mode
 - Searching is only possible for hex-strings. Not ASCII.
 - Searching ignores unsaved changes.
-- Diff mode offers no way of correlating two files. Both start at 0.
 - Some features are missing
 - -k expects a file to be opened
 - -f might overwrite ANY file.
 - GOTO can jump way behind the end of the file
+- some way of exiting won't free all the allocated buffers

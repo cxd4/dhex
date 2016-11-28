@@ -4,12 +4,9 @@
 #include <ncurses.h>
 #include "output.h"
 #include "input.h"
-tUInt64	values[32];
-char	operators[32];
-tInt8	valuenum=0;
 typedef	enum {FIELDHEX,FIELDDEC,FIELDBIN}	eFields;
 
-void hexcalc(WINDOW* win)
+void hexcalc(tOutput* output,thHexCalc* hHexCalc)
 {
 	tInt16	offsx;
 	tInt16	offsy;
@@ -26,88 +23,88 @@ void hexcalc(WINDOW* win)
 	tBool	neg=0;
 	eFields	field=FIELDHEX;
 
-	valuenum=0;
-	operators[0]='=';
+//	hHexCalc->valuenum=0;
+	if (hHexCalc->operators[0]==0) hHexCalc->operators[0]='=';
 
 	offsx=COLS/2-40;
 	offsy=LINES/2-10;	
-	drawframe(win,offsy,offsx,21,79,"HexCalc");
+	drawframe(output,offsy,offsx,21,79,"HexCalc");
 
-	setcolor(win,COLOR_BRACKETS);
+	setcolor(output,COLOR_BRACKETS);
 	for (i=0;i<17;i++)
 	{
-		mvwprintw(win,offsy+2+i,offsx+2,"[                ] [                    ] [                                ]");
+		mvwprintw(output->win,offsy+2+i,offsx+2,"[                ] [                    ] [                                ]");
 	}
-	setcolor(win,COLOR_MENUNORMAL);
-	mvwprintw(win,offsy+20,offsx+ 2,":Add");
-	mvwprintw(win,offsy+20,offsx+ 8,":Sub");
-	mvwprintw(win,offsy+20,offsx+14,":Mul");
-	mvwprintw(win,offsy+20,offsx+20,":Div");
-	mvwprintw(win,offsy+20,offsx+26,":Mod");
-	mvwprintw(win,offsy+20,offsx+32,">:Right");
-	mvwprintw(win,offsy+20,offsx+41,"<:Left");
-	mvwprintw(win,offsy+20,offsx+49,":And");
-	mvwprintw(win,offsy+20,offsx+55,":Or");
-	mvwprintw(win,offsy+20,offsx+61,":Xor");
+	setcolor(output,COLOR_MENUNORMAL);
+	mvwprintw(output->win,offsy+20,offsx+ 2,":Add");
+	mvwprintw(output->win,offsy+20,offsx+ 8,":Sub");
+	mvwprintw(output->win,offsy+20,offsx+14,":Mul");
+	mvwprintw(output->win,offsy+20,offsx+20,":Div");
+	mvwprintw(output->win,offsy+20,offsx+26,":Mod");
+	mvwprintw(output->win,offsy+20,offsx+32,">:Right");
+	mvwprintw(output->win,offsy+20,offsx+41,"<:Left");
+	mvwprintw(output->win,offsy+20,offsx+49,":And");
+	mvwprintw(output->win,offsy+20,offsx+55,":Or");
+	mvwprintw(output->win,offsy+20,offsx+61,":Xor");
 	
-	mvwprintw(win,offsy+20,offsx+74,"Exit");	
+	mvwprintw(output->win,offsy+20,offsx+74,"Exit");	
 
-	setcolor(win,COLOR_MENUHOTKEY);
-	mvwprintw(win,offsy+20,offsx+ 1,"+");
-	mvwprintw(win,offsy+20,offsx+ 7,"-");
-	mvwprintw(win,offsy+20,offsx+13,"*");
-	mvwprintw(win,offsy+20,offsx+19,"/");
-	mvwprintw(win,offsy+20,offsx+25,"%%");
-	mvwprintw(win,offsy+20,offsx+31,">");
-	mvwprintw(win,offsy+20,offsx+40,"<");
-	mvwprintw(win,offsy+20,offsx+48,"&");
-	mvwprintw(win,offsy+20,offsx+54,"|");
-	mvwprintw(win,offsy+20,offsx+60,"^");
-	mvwprintw(win,offsy+20,offsx+75,"x");
+	setcolor(output,COLOR_MENUHOTKEY);
+	mvwprintw(output->win,offsy+20,offsx+ 1,"+");
+	mvwprintw(output->win,offsy+20,offsx+ 7,"-");
+	mvwprintw(output->win,offsy+20,offsx+13,"*");
+	mvwprintw(output->win,offsy+20,offsx+19,"/");
+	mvwprintw(output->win,offsy+20,offsx+25,"%%");
+	mvwprintw(output->win,offsy+20,offsx+31,">");
+	mvwprintw(output->win,offsy+20,offsx+40,"<");
+	mvwprintw(output->win,offsy+20,offsx+48,"&");
+	mvwprintw(output->win,offsy+20,offsx+54,"|");
+	mvwprintw(output->win,offsy+20,offsx+60,"^");
+	mvwprintw(output->win,offsy+20,offsx+75,"x");
 	
 
-	setcolor(win,COLOR_TEXT);
-	mvwprintw(win,offsy+1,offsx+ 3,"Hex");
-	mvwprintw(win,offsy+1,offsx+22,"Dec");
-	mvwprintw(win,offsy+1,offsx+45,"Bin");
+	setcolor(output,COLOR_TEXT);
+	mvwprintw(output->win,offsy+1,offsx+ 3,"Hex");
+	mvwprintw(output->win,offsy+1,offsx+22,"Dec");
+	mvwprintw(output->win,offsy+1,offsx+45,"Bin");
 	while (ch!='x' && ch!='X')
 	{
-		setcolor(win,COLOR_TEXT);
-		mvwprintw(win,offsy+19,offsx+ 1,"%c",operators[0]);
-		for (i=0;i<17 && i<valuenum;i++)
+		setcolor(output,COLOR_TEXT);
+		mvwprintw(output->win,offsy+19,offsx+ 1,"%c",hHexCalc->operators[0]);
+		for (i=0;i<17 && i<hHexCalc->valuenum;i++)
 		{	
-			setcolor(win,COLOR_TEXT);
-			mvwprintw(win,offsy+18-i,offsx+ 1,"%c",operators[i+1]);
-			x=values[i];
-			setcolor(win,(field==FIELDHEX && cursorline==i)?COLOR_INPUT:COLOR_TEXT);
-			mvwprintw(win,offsy+18-i,offsx+ 3,"%16llx",x);
-			setcolor(win,(field==FIELDDEC && cursorline==i)?COLOR_INPUT:COLOR_TEXT);
-			mvwprintw(win,offsy+18-i,offsx+22,"%20lli",(tInt64)x);
-			setcolor(win,(field==FIELDBIN && cursorline==i)?COLOR_INPUT:COLOR_TEXT);
+			setcolor(output,COLOR_TEXT);
+			mvwprintw(output->win,offsy+18-i,offsx+ 1,"%c",hHexCalc->operators[i+1]);
+			x=hHexCalc->values[i];
+			setcolor(output,(field==FIELDHEX && cursorline==i)?COLOR_INPUT:COLOR_TEXT);
+			mvwprintw(output->win,offsy+18-i,offsx+ 3,"%16llx",x);
+			setcolor(output,(field==FIELDDEC && cursorline==i)?COLOR_INPUT:COLOR_TEXT);
+			mvwprintw(output->win,offsy+18-i,offsx+22,"%20lli",(tInt64)x);
+			setcolor(output,(field==FIELDBIN && cursorline==i)?COLOR_INPUT:COLOR_TEXT);
 			for (j=0;j<32;j++)
 			{
-				if (x || !j)	mvwprintw(win,offsy+18-i,offsx+76-j,"%i",(x&1));
-				else		mvwprintw(win,offsy+18-i,offsx+76-j," ");
+				if (x || !j)	mvwprintw(output->win,offsy+18-i,offsx+76-j,"%i",(x&1));
+				else		mvwprintw(output->win,offsy+18-i,offsx+76-j," ");
 				x>>=1;
 			}
 		}
-		if (cursorline==-1) x=newval; else x=values[cursorline];
-		setcolor(win,(field==FIELDHEX && cursorline==-1)?COLOR_INPUT:COLOR_TEXT);
-		mvwprintw(win,offsy+19,offsx+ 3,"%16llx",x);
-		setcolor(win,(field==FIELDDEC && cursorline==-1)?COLOR_INPUT:COLOR_TEXT);
-		if (x || !neg) mvwprintw(win,offsy+19,offsx+22,"%20lli",(tInt64)x);
-		else if (neg) mvwprintw(win,offsy+19,offsx+22,"                  -"); 
-		setcolor(win,(field==FIELDBIN && cursorline==-1)?COLOR_INPUT:COLOR_TEXT);
+		if (cursorline==-1) x=newval; else x=hHexCalc->values[cursorline];
+		setcolor(output,(field==FIELDHEX && cursorline==-1)?COLOR_INPUT:COLOR_TEXT);
+		mvwprintw(output->win,offsy+19,offsx+ 3,"%16llx",x);
+		setcolor(output,(field==FIELDDEC && cursorline==-1)?COLOR_INPUT:COLOR_TEXT);
+		if (x || !neg) mvwprintw(output->win,offsy+19,offsx+22,"%20lli",(tInt64)x);
+		else if (neg) mvwprintw(output->win,offsy+19,offsx+22,"                  -"); 
+		setcolor(output,(field==FIELDBIN && cursorline==-1)?COLOR_INPUT:COLOR_TEXT);
 		for (j=0;j<32;j++)
 		{
-			if (x || !j)	mvwprintw(win,offsy+19,offsx+76-j,"%i",(x&1));
-			else		mvwprintw(win,offsy+19,offsx+76-j," ");
+			if (x || !j)	mvwprintw(output->win,offsy+19,offsx+76-j,"%i",(x&1));
+			else		mvwprintw(output->win,offsy+19,offsx+76-j," ");
 			x>>=1;
 		}
-		ch=getkey(1);
+		ch=getkey((tKeyTab*)output->pKeyTab,1);
 		switch (ch)
 		{
-			case	KEYUP:		if (cursorline<(valuenum-1))	cursorline++;break;
+			case	KEYUP:		if (cursorline<(hHexCalc->valuenum-1))	cursorline++;break;
 			case	KEYDOWN:	if (cursorline>-1)		cursorline--;break;
 			case	KEYLEFT:	if (field!=FIELDHEX)		field--;break;
 			case	KEYRIGHT:	if (field!=FIELDBIN)		field++;break;
@@ -124,11 +121,11 @@ void hexcalc(WINDOW* win)
 			case	'<':
 			case	KEYENTER:
 					
-						if (cursorline!=-1) newval=values[cursorline];
+						if (cursorline!=-1) newval=hHexCalc->values[cursorline];
 						cursorline=-1;
-						if (valuenum)
+						if (hHexCalc->valuenum)
 						{
-							switch(operators[0])
+							switch(hHexCalc->operators[0])
 							{
 								case	'=':	akkumulator=newval;break;
 								case	'+':	akkumulator=akkumulator+newval;break;
@@ -148,16 +145,16 @@ void hexcalc(WINDOW* win)
 							akkumulator=newval;
 						}
 						if (ch==KEYENTER) ch='=';
-						if (cursorline!=-1) newval=values[cursorline];	
+						if (cursorline!=-1) newval=hHexCalc->values[cursorline];	
 						for (i=31;i>0;i--)
 						{
-							values[i]=values[i-1];
-							operators[i]=operators[i-1];
+							hHexCalc->values[i]=hHexCalc->values[i-1];
+							hHexCalc->operators[i]=hHexCalc->operators[i-1];
 						}
-						operators[0]=ch;
-						values[0]=newval;
+						hHexCalc->operators[0]=ch;
+						hHexCalc->values[0]=newval;
 						if (ch=='=') newval=akkumulator; else newval=0;
-						valuenum++;
+						hHexCalc->valuenum++;
 						break;
 
 

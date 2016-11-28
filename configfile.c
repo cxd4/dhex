@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
+#include <string.h>
 #include "configfile.h"
 #include "machine_type.h"
 #include "ncurses.h"
@@ -63,7 +65,7 @@ const tColorName attrNames[5]={		{"UNDERLINE",	 9,0,A_UNDERLINE},
 					{"DIM",		 3,0,A_DIM},
 					{"BOLD",	 4,0,A_BOLD}};
 
-int getcolors(char* line)
+int getcolors(tOutput* output,char* line)
 {
 	int i;
 	int l;
@@ -87,7 +89,12 @@ int getcolors(char* line)
 		if (c==' ' || c==9) c=0;	// ignore all the white spaces
 		else {
 			if (c>='a' && c<='z') c-=32;	// make the letters lower case
-			if (state==0 && c==':') {state=1;tokenidx=0;}
+			if (state==0 && c==':') {
+				token[state][tokenidx++]=c;	//apend the last char
+				token[state][tokenidx]=0;	
+				state=1;
+				tokenidx=0;
+			}
 			else if (state==1 && c=='=') {state=2;tokenidx=0;}
 			else if (state==2 && c==',') {state=3;tokenidx=0;}
 			else if (state==3 && c=='=') {state=4;tokenidx=0;}
@@ -146,11 +153,11 @@ int getcolors(char* line)
 	{
 		if (strncmp(colorGroups[i].configname,token[0],colorGroups[i].len)==0)
 		{
-			colorpair(colorGroups[i].uicol,fg,bg,attrsret);
+			colorpair(output,colorGroups[i].uicol,fg,bg,attrsret);
 		}
 	}
 }
-int readconfigfile(char* filename)
+int readconfigfile(tOutput* output,char* filename)
 {
 	tFptr f=fopen(filename,"rb");
 	unsigned char line[512];
@@ -175,8 +182,8 @@ int readconfigfile(char* filename)
 				line[lineidx]=0;
 				if (c<32)
 				{
-					getcolors(line);
-					keyboardcnt+=(configkeytab(line)==0);
+					getcolors(output,line);
+					keyboardcnt+=(configkeytab((tKeyTab*)output->pKeyTab,line)==0);
 					lineidx=0;
 					line[0]=0;
 				}

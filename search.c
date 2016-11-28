@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
+#include <string.h>
 #include "search.h"
 #include "buffers.h"
 #include "machine_type.h"
@@ -104,7 +106,7 @@ tInt8	searchfor(tSearch* search,tBuffer* buf,tUInt64* cursorpos,tBool nextnotpre
 		increment=1;
 		idx=getbufferidx(buf,actcursorpos);
 		if ((actcursorpos+search->searchlen)<=buf->bufsize)
-			 found=(memcmp(&buf->dataptr[idx],search->searchstring,search->searchlen)==0);
+			 found=(memcmp(&buf->data[idx],search->searchstring,search->searchlen)==0);
 		else found=0;
 		if (found)
 		{
