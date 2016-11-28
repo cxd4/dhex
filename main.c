@@ -1,6 +1,6 @@
 #define	MAJORVERSION	0
 #define	MINORVERSION	6
-#define	REVISION	6
+#define	REVISION	7
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -22,7 +22,7 @@
 void welcomescreen(char* argv0)
 {
 	fprintf(stderr,"*** DHEX %i.%i%i\n",MAJORVERSION,MINORVERSION,REVISION);
-	fprintf(stderr,"*** (C)opyleft 2011 by Thomas Dettbarn\n");
+	fprintf(stderr,"*** (C)opyleft 2012 by Thomas Dettbarn\n");
 	fprintf(stderr,"*** dettus@dettus.net (include DHEX somewhere in the subject)\n\n");
 	fprintf(stderr,"\n");
 	fprintf(stderr,"(start it with %s -gpl to see the license)\n",argv0);
@@ -56,6 +56,10 @@ void helpscreen(char* argv0,int exitval)
 	fprintf(stderr," -m, -M [markerfile]        read the bookmarks from [markerfile]\n");
 	fprintf(stderr,"\n");
 	fprintf(stderr,"%s [Parameters] [Filename]: Edit a single file\n",argv0);
+	fprintf(stderr," -ab, -AB [x]                 set the base address to [x] (binary)\n");
+	fprintf(stderr," -ad, -AD [x]                 set the base address to [x] (decimal)\n");
+	fprintf(stderr," -ah, -AH [x]                 set the base address to [x] (hexadecimal)\n");
+	fprintf(stderr," -ao, -AO [x]                 set the base address to [x] (octal)\n");
 	fprintf(stderr," -ob, -OB [x]                 set the cursor to [x] (binary)\n");
 	fprintf(stderr," -od, -OD [x]                 set the cursor to [x] (decimal)\n");
 	fprintf(stderr," -oh, -OH [x]                 set the cursor to [x] (hexadecimal)\n");
@@ -68,6 +72,10 @@ void helpscreen(char* argv0,int exitval)
 	fprintf(stderr,"%s [Parameters] [Filename1] [Filename2]: Diff mode\n",argv0);
 	fprintf(stderr," -cd, -CD [x]                      correlate with the minimum difference\n");
 	fprintf(stderr," -cb, -CB, -cl, -CL                correlate with the best/longest match\n");
+	fprintf(stderr," -a1b, -A1B  [x] -a2b, -A2B  [y]   base addresses to [x] and [y] (binary)\n");
+	fprintf(stderr," -a1d, -A1D  [x] -a2d, -A2D  [y]   base addresses to [x] and [y] (decimal)\n");
+	fprintf(stderr," -a1h, -A1H  [x] -a2h, -A2H  [y]   base addresses to [x] and [y] (hexadecimal)\n");
+	fprintf(stderr," -a1o, -A1O  [x] -a2o, -A2O  [y]   base addresses to [x] and [y] (octal)\n");
 	fprintf(stderr," -o1b, -O1B  [x] -o2b, -O2B  [y]   set the cursors to [x] and [y] (binary)\n");
 	fprintf(stderr," -o1d, -O1D  [x] -o2d, -O2D  [y]   set the cursors to [x] and [y] (decimal)\n");
 	fprintf(stderr," -o1h, -O1H  [x] -o2h, -O2H  [y]   set the cursors to [x] and [y] (hexadecimal)\n");
@@ -122,7 +130,7 @@ int parsecursorpos(tInt64* cursorpos1,tInt64* cursorpos2,char* lastopt,char* arg
 	return RETOK;	
 	
 }
-int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* cursorpos2,tBool* diffmode,int* filename1,int* filename2,tBool* keyboardsetupreq,char* markerfilename,char* configfile,tSearch* search1,tBool* gosearch1,tSearch* search2,tBool* gosearch2,tCorrelation* correlation,tBool* gocorr)
+int parsecommandlineoptions(int argc,char** argv,tInt64* baseaddr1,tInt64* baseaddr2,tInt64* cursorpos1,tInt64* cursorpos2,tBool* diffmode,int* filename1,int* filename2,tBool* keyboardsetupreq,char* markerfilename,char* configfile,tSearch* search1,tBool* gosearch1,tSearch* search2,tBool* gosearch2,tCorrelation* correlation,tBool* gocorr)
 {
 	int filenamecnt=0;
 	int i;
@@ -190,6 +198,10 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* curs
 		{
 			switch (lastopt[0])
 			{
+				case 'A':
+				case 'a':	
+						retval=parsecursorpos(baseaddr1,baseaddr2,lastopt,argv[i]);
+						break;
 				case 'C':
 				case 'c':
 						correlation->start_mindiff=atoi(argv[i]);	
@@ -360,8 +372,10 @@ int main(int argc,char** argv)
 	tBuffer*	buf1=NULL;
 	tBuffer*	buf2=NULL;
 	tOutput*	output=NULL;
+	tInt64 baseaddr1=0;
 	tInt64 cursorpos1;
 	tInt64 firstpos1;
+	tInt64 baseaddr2=0;
 	tInt64 cursorpos2;
 	tInt64 firstpos2;
 	tInt64 oldcursorpos1;
@@ -402,7 +416,7 @@ int main(int argc,char** argv)
 	clearsearch(&search1);
 	clearsearch(&search2);
 	clear_correlation(&correlation);
-	if (parsecommandlineoptions(argc,argv,&cursorpos1,&cursorpos2,&diffmode,&filename1,&filename2,&keyboardsetupreq,markerfilename,configfile,&search1,&gosearch1,&search2,&gosearch2,&correlation,&gocorr)!=RETOK)
+	if (parsecommandlineoptions(argc,argv,&baseaddr1,&baseaddr2,&cursorpos1,&cursorpos2,&diffmode,&filename1,&filename2,&keyboardsetupreq,markerfilename,configfile,&search1,&gosearch1,&search2,&gosearch2,&correlation,&gocorr)!=RETOK)
 	{
 		if (output)
 		{
@@ -412,6 +426,8 @@ int main(int argc,char** argv)
 		if (markers) free(markers);
 		helpscreen(argv[0],0);
 	}
+	if (cursorpos1 && baseaddr1 && cursorpos1>=baseaddr1) cursorpos1-=baseaddr1;	
+	if (cursorpos2 && baseaddr2 && cursorpos2>=baseaddr2) cursorpos2-=baseaddr2;	
 	if (configfile[0]==0)
 	{
 		homedir=getenv("HOME");
@@ -479,10 +495,12 @@ int main(int argc,char** argv)
 	memset(hHexCalc,0,sizeof(thHexCalc));
 	buf1=malloc(sizeof(tBuffer));
 	memset(buf1,0,sizeof(tBuffer));
+	buf1->baseaddr=baseaddr1;
 	if (diffmode)
 	{
 		buf2=malloc(sizeof(tBuffer));
 		memset(buf2,0,sizeof(tBuffer));
+		buf2->baseaddr=baseaddr2;
 	}
 
 	if (openbuf(buf1,1,argv[filename1])!=RETOK)
@@ -600,7 +618,7 @@ int main(int argc,char** argv)
 			}
 			if (ch==KEYTAB) {windowfield=(windowfield+1)&1;}
 			if ((ch==KEYF1 || (ch==':' && windowfield==0))&& !diffmode)	{
-				if (gotomask(output,markers,&cursorpos1)==RETOK)
+				if (gotomask(output,markers,&cursorpos1,buf1->baseaddr)==RETOK)
 				{
 					firstpos1=cursorpos1;	
 				}

@@ -2,7 +2,7 @@
 .\" groff -man -Tascii dhex.1
 .\"
 .
-.Dd February 12, 2011
+.Dd May 12, 2012
 .Os
 .Dt DHEX 1
 .
@@ -19,6 +19,9 @@
 .Op Fl v
 .Op Fl g
 .Op Fl k
+.Bk -words
+.Op Fl ab ad ah ao Ar base address
+.Ek
 .Bk -words
 .Op Fl f Ar config-file
 .Ek
@@ -46,6 +49,12 @@
 .Op Fl v
 .Op Fl g
 .Op Fl k
+.Bk -words
+.Op Fl a1b a1d a1h a1o Ar base address 1
+.Ek
+.Bk -words
+.Op Fl a2b a2d a2h a2o Ar base address 2
+.Ek
 .Bk -words
 .Op Fl cb 
 .Ek
@@ -98,6 +107,27 @@ is called with two instead of one file as parameters.
 .Sh OPTIONS
 All the options are case-insensitive and can be given as either upper- or lowercase characters.
 .Bl -tag -width 10n
+.It Fl ab ad ah ao Ar base address
+After loading a file, every address gets a base address other than 0. With this, it is easier to work on partial memory dumps. The base address can be given as a binary one with
+.Op Fl ab
+, as a decimal one with
+.Op Fl ad
+, as a hexadecimal one with
+.Op Fl ah
+or an octal with
+.Op Fl ao .
+.It Fl a1b a1d a1h a1o Ar base address 1
+.It Fl a2b a2d a2h a2o Ar base address 2
+For the diff mode, it is possible to set two different base addresses. Again, a binary address can be given as
+.Op Fl a1b a2b
+, as decimal one with
+.Op Fl a1d a2d
+, as hexadecimal one with
+.Op Fl a1h a2h
+or an octal one with
+.Op Fl a1o a2o .
+.Pp
+This base address is calculated into the marker files as well as the searchlogs.
 .It Fl cb cl
 Diff mode only: The input files can be correlated from the command line with the best
 .Fl cb
@@ -199,6 +229,8 @@ How many bytes are are being shown in a line depends on the width of the termina
 .Pp
 If no other 
 .Op Fl o 
+or 
+.Op Fl a
 parameter was given at start time, the cursor is being set to offset 0. It is also being shown in the hex column. Here, it can be moved with the cursor keys. When entering a hexadecimal number, the file is being edited. The file can be edited in the ascii column as well, simply by pressing the TAB key (or whichever key was substituted for it in the keyboard setup). Pressing TAB again will return the cursor to the hex column. Pressing F9 (or its substitute) will undo the last of the changes. Changes are being shown in a differnt color. 
 .Pp
 Editing is not possible in the diff mode. Here, pressing the cursor keys will move both files synchronously.

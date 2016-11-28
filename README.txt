@@ -1,6 +1,6 @@
 -----------------------------------------------------------------[ 0. Welcome ]-
 
-Thank you for downloading dhex 0.63. It is a hex editor with a diff mode.
+Thank you for downloading dhex 0.67. It is a hex editor with a diff mode.
 Since it is based on ncurses, it runs in any console.
 It makes heavy use of colors, but it is themeable to run on monochrome-displays
 as well.
@@ -18,6 +18,10 @@ Thomas Dettbarn, 30-Dec-2010
 0.63: Man pages were written, searching is possible from the command line.
 0.64: Naive correlation, a new default theme
 0.65: dhex 0.64 crashed at startup on some systems.
+0.66: searching for an ascii string with spaces works, some problems with the
+      color themes were fixed
+0.67: a "base address" functionality was added, which makes it easier to work
+      with memory dumps.
 
 ---------------------------------------------------------[ 1. Getting started ]-
 

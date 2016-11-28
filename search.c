@@ -114,7 +114,7 @@ tInt8	searchfor(tSearch* search,tBuffer* buf,tUInt64* cursorpos,tBool nextnotpre
 					}
 				}
 			}
-			actcursorpos=x;
+			actcursorpos=x-buf->baseaddr;	// FIXME
 			search->lastsearchlogpos=getfilepos(frlog);
 		}
 		increment=1;
@@ -126,7 +126,7 @@ tInt8	searchfor(tSearch* search,tBuffer* buf,tUInt64* cursorpos,tBool nextnotpre
 		{
 			search->occurancesfound++;
 			search->lastoccurance=actcursorpos;
-			if (search->writesearchlog)	fprintf(fwlog,"%016llx\n",(tUInt64)actcursorpos); else done=1;
+			if (search->writesearchlog)	fprintf(fwlog,"%016llx\n",(tUInt64)actcursorpos+buf->baseaddr); else done=1;
 		}
 	}
 	if (frlog) fclose(frlog);

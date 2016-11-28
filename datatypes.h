@@ -58,6 +58,7 @@ typedef struct _tBuffer
 	tBool	nibble;
 	tUInt8	nexthex;
 	tUInt64	changepos;
+	tInt64	baseaddr;
 } tBuffer;
 
 

@@ -95,10 +95,10 @@ int	writemarkerfile(tMarkers* markers,char* filename)
 	fclose(f);
 	return	RETOK;	
 }
-tInt8 gotomask(tOutput* output,tMarkers* markers,tUInt64* cursorpos)
+tInt8 gotomask(tOutput* output,tMarkers* markers,tUInt64* cursorpos,tInt64 baseaddr)
 {
-	tUInt64 actcursorpos=*cursorpos;
-	tUInt64 newcursorpos=*cursorpos;
+	tUInt64 actcursorpos=*cursorpos+baseaddr;
+	tUInt64 newcursorpos=*cursorpos+baseaddr;
 	tInt8	itemnums[25];
 	tInt8	selected;
 	tMenu	Menu1;
@@ -177,7 +177,7 @@ tInt8 gotomask(tOutput* output,tMarkers* markers,tUInt64* cursorpos)
 			newcursorpos=actcursorpos;
 			hexinput(output,offsy+3,offsx+8,&newcursorpos,NULL,17);
 		}
-		if (selected==itemnums[1]) {*cursorpos=newcursorpos;return RETOK;}
+		if (selected==itemnums[1]) {*cursorpos=newcursorpos-baseaddr;return RETOK;} //FIXME
 		if (selected==itemnums[2]) return RETNOK;
 
 		for (i=0;i<NUMMARKERS;i++)
@@ -189,7 +189,7 @@ tInt8 gotomask(tOutput* output,tMarkers* markers,tUInt64* cursorpos)
 			}
 			if (selected==itemnums[13+i]) 
 			{
-				if (markers->relative[i]=='=') newcursorpos =markers->cursorpos[i];
+				if (markers->relative[i]=='=') newcursorpos =markers->cursorpos[i]-baseaddr;	// FIXME
 				if (markers->relative[i]=='-') newcursorpos=actcursorpos-markers->cursorpos[i];
 				if (markers->relative[i]=='+') newcursorpos=actcursorpos+markers->cursorpos[i];
 			}

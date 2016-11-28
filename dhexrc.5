@@ -1,7 +1,7 @@
 .\" Process this file with
 .\" groff -man -Tascii dhex.1
 .\"
-.Dd January 28, 2011
+.Dd May 12, 2012
 .Os
 .Dt DHEXRC 5
 .
@@ -199,7 +199,7 @@ will produce longer sequences. Mapping those sequences back to a specific key is
 and
 .Nm KEYEND . 
 .Pp
-Sequences itself are a string of lower case hex-values, each two nibbles long. Currently, there is no way of adding an alternativ sequence to the same key.
+Sequences itself are a string of lower case hex-values, each two nibbles long. Currently, there is no way of adding an alternative sequence to the same key.
 .Pp
 It is possible that the sequence made up of hex values does not REALLY belong to the key. (For example if F2 was pressed in the setup program when F1 was prompted).
 However, when this sequence ends up in the ncurses buffer, it is being interpreted as if that key was pressed.
