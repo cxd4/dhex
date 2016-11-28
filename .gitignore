@@ -1,3 +1,6 @@
+# target dhex executable
+dhex
+
 # Object files
 *.o
 *.ko
