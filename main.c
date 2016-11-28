@@ -926,7 +926,8 @@ int gotowhere( WINDOW* parent_window,
 		
 			if (m==1)
 			{
-				s=input2(parent_window,wtop+4,wleft+6,11,tohex2(ap2,10),11,0,0);// TODO: er zeigt mir hier mist an. warum??
+//				s=input2(parent_window,wtop+4,wleft+6,11,tohex2(ap2,10),11,0,0);// TODO: er zeigt mir hier mist an. warum??
+				s=input2(parent_window,wtop+4,wleft+6,11,"\0",11,0,0);// TODO: er zeigt mir hier mist an. warum??
 				plus=0;
 				minus=0;
 				value=(int)stohex(s);
@@ -960,6 +961,8 @@ int main(int argc,char *argv[])
 	file_position_t rfilesize2;
 	file_position_t ap2;
     	fpos_t help;
+	unsigned char c1,c2;
+	file_position_t tmpp;
 
 	unsigned int i;
 	int j;
@@ -1054,7 +1057,7 @@ int main(int argc,char *argv[])
 			if (ch=='l') ch=KEY_RIGHT;
 			if (ch==' ') ch=KEY_NPAGE;
 		}
-		if (diffnotedit==1 && ch!=KEY_LEFT && ch!=KEY_RIGHT && ch!=KEY_UP && ch!=KEY_DOWN && ch!=KEY_NPAGE && ch!=KEY_PPAGE && ch!=KEY_F(2) && ch!=KEY_F(3) &&  ch!=KEY_F(10)) ch=0;
+		if (diffnotedit==1 && ch!=KEY_RETURN && ch!=9 && ch!=KEY_BTAB && ch!=KEY_LEFT && ch!=KEY_RIGHT && ch!=KEY_UP && ch!=KEY_DOWN && ch!=KEY_NPAGE && ch!=KEY_PPAGE && ch!=KEY_F(2) && ch!=KEY_F(3) &&  ch!=KEY_F(10)) ch=0;
 		if ((hexnotasc==1) && (((ch>='0') && (ch<='9')) || ((ch>='a') && (ch<='f')) || ((ch>='A') && (ch<='F')))) 
 		{
 			mvwprintw(stdscr,1,1,"h");
@@ -1083,7 +1086,7 @@ int main(int argc,char *argv[])
 			chnum++;
 			ch=KEY_RIGHT;
 		}
-		if (ch==KEY_BTAB || ch==9) hexnotasc=1-hexnotasc;
+		if (diffnotedit==0 && (ch==KEY_BTAB || ch==9)) hexnotasc=1-hexnotasc;
 		if (ch==12 || ch==KEY_F(11) || ch==KEY_REFRESH) {
 			wattrset(stdscr,attrs[COLOR_HEXFIELD]);
 			wclear(stdscr);
@@ -1128,6 +1131,21 @@ int main(int argc,char *argv[])
 			if (ch==KEY_PPAGE && p>=cols*rows/2) {p=p-cols*rows/2;}
 			if (ch==KEY_NPAGE && ((p+cols*rows/2<=filesize) || (p+cols*rows/2<=filesize2))) {p=p+cols*rows/2;}
 			if (ch==KEY_RIGHT && ((p<filesize) || (p<filesize2))) p++;
+			if (ch==KEY_BTAB || ch==9 || ch==KEY_RETURN) 
+			{
+				tmpp=p+1;
+			        fseek(inputfile,tmpp,SEEK_SET);
+       				fseek(inputfile2,tmpp,SEEK_SET);
+				c1=0;
+				c2=0;
+				while (!feof(inputfile)&&!feof(inputfile2) && (c1==c2))
+				{
+					fread(&c1,sizeof(char),1,inputfile);
+					fread(&c2,sizeof(char),1,inputfile2);
+					if (!feof(inputfile)&&!feof(inputfile2)) if (c1==c2) tmpp++;
+				}
+				if (c1!=c2) p=tmpp;
+			}
 		}
 		if (ch==KEY_F(1))
 		{

@@ -1,6 +1,6 @@
 *** DHEX
 *** (C)opyleft 2004 by Thomas Dettbarn
-*** dettus@matrixx-bielefeld.de
+*** dettus@dettus.net (Include DHEX in the subject)
 
 Hello and welcome to DHEX! 
 It is just another Hexeditor with a diff-mode for ncurses. It makes heavy use of
@@ -37,7 +37,7 @@ right. On the bottom you can see the Mainmenu.
 
 -- USAGE.MOVEMENT
   To move around in the file you can use the cursorkeys, and also PageUp and
-  PageDown. 
+  PageDown. In Diff-mode the Tab-key lets you jump to the next difference.
   If your terminal doesn't support cursorkeys, you are free to use the <h,j,k,l>
   keys while your cursor is on the hex-side of your screen.
 
