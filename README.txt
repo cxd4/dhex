@@ -17,6 +17,7 @@ Thomas Dettbarn, 30-Dec-2010
 0.62: Code cleanup, bug fixes, and as new features: bookmarks and ascii-search.
 0.63: Man pages were written, searching is possible from the command line.
 0.64: Naive correlation, a new default theme
+0.65: dhex 0.64 crashed at startup on some systems.
 
 ---------------------------------------------------------[ 1. Getting started ]-
 

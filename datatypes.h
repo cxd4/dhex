@@ -62,7 +62,7 @@ typedef struct _tBuffer
 
 
 /* CORRELATION DATATYPES */
-typedef	enum {CORR_BEST_MATCH,CORR_MIN_DIFF,CORR_LONGEST_MATCH} corr_algorithms;
+typedef	enum {CORR_BEST_MATCH,CORR_LONGEST_MATCH,CORR_MIN_DIFF} corr_algorithms;
 typedef struct _tCorrelation
 {	
 	tBool		correlated;

@@ -220,7 +220,6 @@ void find_mindiff(tOutput* output,tCorrelation* correlation,tBuffer* buf1,tBuffe
 				idx2=getbufferidx(smallbuf,pos2);
 
 				diff+=(bigbuf->data[idx1]!=smallbuf->data[idx2]);
-				match+=(bigbuf->data[idx1]==smallbuf->data[idx2]);
 			} else {
 				diff++;
 			}
@@ -229,7 +228,6 @@ void find_mindiff(tOutput* output,tCorrelation* correlation,tBuffer* buf1,tBuffe
 		{
 			correlation->mindiffpos=pos1;
 			correlation->mindiff=diff;
-			correlation->bestmatch=match;
 			if (smallwin) mvwprintw(smallwin,4,1,"%18lli",diff);
 			if (smallwin) mvwprintw(smallwin,5,3,"%16llx",pos1);
 			found=1;
@@ -251,6 +249,7 @@ void find_mindiff(tOutput* output,tCorrelation* correlation,tBuffer* buf1,tBuffe
 }
 void find_correlation(tOutput* output,tCorrelation* correlation,tBuffer* buf1,tBuffer* buf2,tInt64* cursorpos1,tInt64* cursorpos2)
 {
+	tInt16	ch=0;
 	correlation->correlated=1;
 	switch(correlation->algorithm)
 	{
@@ -258,14 +257,16 @@ void find_correlation(tOutput* output,tCorrelation* correlation,tBuffer* buf1,tB
 		case CORR_LONGEST_MATCH:	find_longestmatch(output,correlation,buf1,buf2,cursorpos1,cursorpos2);break;
 		case CORR_MIN_DIFF:		find_mindiff(output,correlation,buf1,buf2,cursorpos1,cursorpos2);break;
 	}
+	if (output)
+	{
+		while (ch!=ERR)
+		{
+			ch=getch();		// remove all the keys which have been pressed from the buffer
+		}
+	}
 }
 void clear_correlation(tCorrelation* correlation)
 {
-	tInt16	ch=0;
 	memset(correlation,0,sizeof(tCorrelation));
 	correlation->algorithm=CORR_BEST_MATCH;
-	while (ch!=ERR)
-	{
-		ch=getch();		// remove all the keys which have been pressed from the buffer
-	}
 }

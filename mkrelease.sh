@@ -1,4 +1,4 @@
-mkdir dhex_0.64
+mkdir dhex_0.65
 for I in `echo "
 Makefile 
 buffers.c 
@@ -37,11 +37,11 @@ dhex_markers.5
 dhex_searchlog.5 
 mkrelease.sh"  | sort -f`
 do
-	cp $I dhex_0.64/
+	cp $I dhex_0.65/
 done
-( cd dhex_0.64/ && make && make clean && cd .. && \
-tar cvfz dhex_0.64.tar.gz dhex_0.64/ )
-cp dhex_0.64.tar.gz dhex_latest.tar.gz
-md5 dhex_0.64.tar.gz
+( cd dhex_0.65/ && make && make clean && cd .. && \
+tar cvfz dhex_0.65.tar.gz dhex_0.65/ )
+cp dhex_0.65.tar.gz dhex_latest.tar.gz
+md5 dhex_0.65.tar.gz
 md5 dhex_latest.tar.gz
 
