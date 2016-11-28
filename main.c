@@ -541,7 +541,7 @@ file_position_t searchforwardhex(file_position_t cursorpos,file_position_t files
 		{
 			//GEFUNDEN
 			t=ocp+k-j;
-			if (writesearch==1) fprintf(writesearchfile,"%X%X%X%X\n",((int)((t>>48)&65535)),((int)((t>>32)&65535)),((int)((t>>16)&65535)),((int)(t&65535)));
+			if (writesearch==1) fprintf(writesearchfile,"%04X%04X%04X%04X\n",((int)((t>>48)&65535)),((int)((t>>32)&65535)),((int)((t>>16)&65535)),((int)(t&65535)));
 			else return t;
 
 			j=kmp[j];
@@ -592,7 +592,7 @@ file_position_t searchforwardhex2(file_position_t cursorpos,file_position_t file
 			if (mismatch==0 && cp!=ocp)
 			{
 				ocp=cp;
-				if (writesearch==1) fprintf(writesearchfile,"%X%X%X%X\n",((int)((cp>>48)&65535)),((int)((cp>>32)&65535)),((int)((cp>>16)&65535)),((int)(cp&65535))); 
+				if (writesearch==1) fprintf(writesearchfile,"%04X%04X%04X%04X\n",((int)((cp>>48)&65535)),((int)((cp>>32)&65535)),((int)((cp>>16)&65535)),((int)(cp&65535))); 
 				else return cp;
 			}
 		}

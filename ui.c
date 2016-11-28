@@ -9,7 +9,7 @@ void byebye(int sig)
 {
 	fprintf(stderr,"*** DHEX %i.%i%i\n",MAJOR_VERSION,MINOR_VERSION,REVISION);
 	fprintf(stderr,"*** (C)opyleft 2k3 by Dettus\n");
-	fprintf(stderr,"*** dettus@matrixx-bielefeld.de\n\n");
+	fprintf(stderr,"*** dettus@gmx.de\n\n");
 	fprintf(stderr,"(start it with dhex -gpl to see the license)\n\n\n");
 	ende();
 	exit(sig);
