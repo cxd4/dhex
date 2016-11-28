@@ -1,5 +1,7 @@
 CC=gcc
-CFLAGS=-DLINUX=1 -O3 -Wall -I/homes/tdettbar/local/include
+#CFLAGS=-DLINUX=1 -O3 -Wall -I/homes/tdettbar/local/include
+#CFLAGS=-DHPUX=1 -O3 -Wall -I/homes/tdettbar/local/include
+CFLAGS=-DFREEBSD=1 -O3 -Wall -I/homes/tdettbar/local/include
 #CFLAGS=-DSOLARIS=1 -O3 -Wall -I/homes/tdettbar/local/include
 #CFLAGS=-DIRIX=1 -O3 -Wall -I/homes/tdettbar/local/include
 LDFLAGS=-L/homes/tdettbar/local/lib

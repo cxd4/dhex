@@ -4,6 +4,9 @@
 #include <ncurses.h>
 #include "gpl.h"
 #include "ui.h"
+#ifdef FREEBSD
+	#define file_position_t uint64_t
+#endif
 #ifdef LINUX
 	#include <stdint.h>
 	#define file_position_t uint64_t
@@ -12,6 +15,9 @@
         #define file_position_t fpos_t
 #endif
 #ifdef SOLARIS
+	#define file_position_t fpos64_t
+#endif
+#ifdef HPUX
 	#define file_position_t fpos64_t
 #endif
 
