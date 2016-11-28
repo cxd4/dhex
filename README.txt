@@ -22,6 +22,8 @@ Thomas Dettbarn, 30-Dec-2010
       color themes were fixed
 0.67: a "base address" functionality was added, which makes it easier to work
       with memory dumps.
+0.68: slight bug fix as suggested by christoph: under some circumstances, the
+      opening of a file could segfault. 
 
 ---------------------------------------------------------[ 1. Getting started ]-
 

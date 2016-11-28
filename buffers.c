@@ -13,11 +13,20 @@
 // 
 tUInt32 openbuf(tBuffer* hBuf,tUInt8 bufnum,char* filename)
 {
+	unsigned int filenamelen=0;
+	if (filename == NULL)
+		return	RETNOK;
+
+	filenamelen=strlen(filename);
+	if (filenamelen>510)
+		filenamelen=510;
+
 	hBuf->changesnum=0;
 	hBuf->valid=0;
 	hBuf->fresh=1;
 	hBuf->file=fopen(filename,"rb");
-	memcpy(hBuf->filename,filename,512);
+	memcpy(hBuf->filename,filename,filenamelen+1);
+
 	hBuf->filename[511]=0;
 	if (hBuf->file)
 	{

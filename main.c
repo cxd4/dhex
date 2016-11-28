@@ -1,6 +1,6 @@
 #define	MAJORVERSION	0
 #define	MINORVERSION	6
-#define	REVISION	7
+#define	REVISION	8
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
