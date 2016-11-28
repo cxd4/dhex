@@ -31,22 +31,25 @@ char *MENU_text[MENU_MAX];
 char MENU_hotkey1[MENU_MAX];
 char MENU_hotkey2[MENU_MAX];
 char MENU_hotkey3[MENU_MAX];
-int MENU_num;
-int MENU_pos;
-int MENU_updown_nleftright;
+unsigned int MENU_num;
+unsigned int MENU_pos;
+unsigned int MENU_updown_nleftright;
 
 int printable(int ch);
-int getch2();
-void init_colors();
-char *input2(WINDOW *parent,int y,int x,int len,const char *text,int max,int special,int lastkey);
-char *input(WINDOW *parent,int y,int x,int len,const char *text,int max);
+int getch2(void);
+void init_colors(void);
+char *input2(WINDOW *parent,int y,int x, unsigned int len,const char *text, unsigned int max,int special,int lastkey);
+char *input(WINDOW *parent,int y,int x, unsigned int len,const char *text, unsigned int max);
+
 void new_menu(int updown_nleftright);
-void menu_item(int pos,int y,int x,char *text, char hotkey1,char hotkey2,char hotkey3);
+void menu_item(unsigned int pos,int y,int x,char *text, char hotkey1,char hotkey2,char hotkey3);
 int menu_show(WINDOW *parent);
 void draw_frame(WINDOW *parent,int y1,int x1,int y2,int x2,char fillcharacter);
 void erase_frame(WINDOW *parent,int y1,int x1,int y2,int x2,char fillcharacter);
 void headline(WINDOW *parent,int y,int x,const char* text);
 void main_headline(WINDOW *parent,char* text);
+void draw_mainheadline(WINDOW *parent_window,int y,char *text) ;
+void uimain(void);
 
 
 

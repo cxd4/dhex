@@ -1,22 +1,26 @@
 #include <stdio.h>
+#include <sys/types.h>        // uint64_t
 #include <stdlib.h>
 #include <ncurses.h>
 #include "gpl.h"
 #include "ui.h"
+#ifdef LINUX
+	#include <stdint.h>
+	#define file_position_t uint64_t
+#endif
 #ifdef IRIX
         #define file_position_t fpos_t
-#elifdef SOLARIS
-	#define file_position_t uint64_t
-#else
-	#define file_position_t unsigned long
+#endif
+#ifdef SOLARIS
+	#define file_position_t fpos64_t
 #endif
 
 
 FILE* inputfile;
 FILE* inputfile2;
 int obenanfangen=1;
-int cursorpos;
-int cols;
+file_position_t cursorpos;
+unsigned int cols;
 int rows;
 FILE *inputfile;
 file_position_t chpos[524288];
@@ -24,9 +28,9 @@ unsigned char change[524288];
 int chnum=0;
 char* searchstring;
 int searchstring2[255];
-int searchstring2len=0;
+unsigned int searchstring2len=0;
 int searchstring3[255];
-int searchstring3len=0;
+unsigned int searchstring3len=0;
 char* writesearchfilename;
 char* readsearchfilename;
 FILE *readsearchfile;
@@ -48,16 +52,16 @@ char* tohex(char x)
 	return ch;	
 	
 }
-void print_pos(WINDOW *parent_window,file_position_t p,int y)
+void print_pos(WINDOW *parent_window, file_position_t p,int y)
 {
-	mvwprintw(parent_window,y,0,"%10X",(unsigned long)p);	
+	mvwprintw(parent_window,y,0,"%10X",(unsigned long) p);	
 	
 }
 void print_hex(WINDOW *parent_window,file_position_t p,file_position_t cursorpos,file_position_t filesize,file_position_t rfilesize,int hexnotasc,int ch2)
 {
 	unsigned char buffer[2];
 	float f;
-	int i;
+	unsigned int i;
 	int j;
 	int x;
 	int y;
@@ -71,8 +75,8 @@ void print_hex(WINDOW *parent_window,file_position_t p,file_position_t cursorpos
 	wattrset(parent_window,attrs[COLOR_BRACKETS]);
 	mvwprintw(parent_window,0,1,"[          /          ]");
 	wattrset(parent_window,attrs[COLOR_TEXT]);
-	mvwprintw(parent_window,0,2,"%10X",cursorpos);	
-	mvwprintw(parent_window,0,13,"%10X",filesize-1);	
+	mvwprintw(parent_window,0,2,"%10X",(unsigned long)cursorpos);	
+	mvwprintw(parent_window,0,13,"%10X",(unsigned long)(filesize-1));	
 	wattrset(parent_window,attrs[COLOR_HEXFIELD]);
 	fseek(inputfile,p,SEEK_SET);
 	for (y=1;y<LINES-1;y++)
@@ -117,17 +121,20 @@ void print_hex(WINDOW *parent_window,file_position_t p,file_position_t cursorpos
 	}
 	
 }
-void print_hex_diff(WINDOW *parent_window,file_position_t p,file_position_t cursorpos,file_position_t filesize1,file_position_t rfilesize1,file_position_t filesize2,file_position_t rfilesize2,const char* filename2)
+void print_hex_diff( WINDOW *parent_window,
+	                 file_position_t p,
+					 file_position_t cursorpos,
+					 file_position_t filesize1,
+					 file_position_t filesize2,
+					 char* filename2)
 {
 	unsigned char buffer[2];
 	unsigned char buffer2[2];
 	float f;
-	int i;
-	int j;
+	unsigned int i;
 	int x;
 	int y;
 	int b;
-	int c;
 	file_position_t ap=p;
 	f=(float)COLS-10;
 	f=f/4.125;
@@ -140,10 +147,10 @@ void print_hex_diff(WINDOW *parent_window,file_position_t p,file_position_t curs
 	mvwprintw(parent_window,0,1,"[          /          ]");
 	mvwprintw(parent_window,b,1,"[          /          ]");
 	wattrset(parent_window,attrs[COLOR_TEXT]);
-	mvwprintw(parent_window,0,2,"%10X",cursorpos);	
-	mvwprintw(parent_window,0,13,"%10X",filesize1-1);	
-	mvwprintw(parent_window,b,2,"%10X",cursorpos);	
-	mvwprintw(parent_window,b,13,"%10X",filesize2-1);	
+	mvwprintw(parent_window,0,2,"%10X",(unsigned long)cursorpos);	
+	mvwprintw(parent_window,0,13,"%10X",(unsigned long)(filesize1-1));	
+	mvwprintw(parent_window,b,2,"%10X",(unsigned long)cursorpos);	
+	mvwprintw(parent_window,b,13,"%10X",(unsigned long)(filesize2-1));	
 	wattrset(parent_window,attrs[COLOR_HEXFIELD]);
 	fseek(inputfile,p,SEEK_SET);
 	fseek(inputfile2,p,SEEK_SET);
@@ -156,7 +163,7 @@ void print_hex_diff(WINDOW *parent_window,file_position_t p,file_position_t curs
 		{
 			if (!feof(inputfile)) fgets(buffer,sizeof(buffer),inputfile);
 			if (!feof(inputfile2)) fgets(buffer2,sizeof(buffer2),inputfile2);
-			// TODO: find a nice and satisfactional way to edit two files at once!/*{{{*/
+			// TODO: find a nice and satisfactional way to edit two files at once!
 /*
 			c=buffer[0];
 			
@@ -189,7 +196,7 @@ void print_hex_diff(WINDOW *parent_window,file_position_t p,file_position_t curs
 			if (ap<filesize) if (c>=32 && c<=127) mvwprintw(parent_window,y,(int)i+(COLS-cols),"%c",(char)c);	else
 			mvwprintw(parent_window,y,(int)i+(COLS-cols),".");	else mvwprintw(parent_window,y,(int)i+(COLS-cols)," ");
 			*/
-			/*}}}*/
+			
 			f=(float)i;
 			f=f*3.125;
 			if (buffer[0]!=buffer2[0] || ap>=filesize1 || ap>=filesize2) wattrset(parent_window,attrs[COLOR_DIFF]); else wattrset(parent_window,attrs[COLOR_HEXFIELD]);
@@ -210,12 +217,16 @@ void print_hex_diff(WINDOW *parent_window,file_position_t p,file_position_t curs
 char* tobin(unsigned int value)
 {
 	char* s;
-	int i;
+	unsigned int i;
 	s=malloc(20);
 	s[19]=0;
 	for (i=0;i<19;i++)
 	{
-		if ((value&(1<<i))==(1<<i)) s[18-i]='1'; else s[18-i]='0';
+		if (value & (1<<i)) {
+		  s[18-i]='1'; 
+		} else {
+		  s[18-i]='0';
+		}
 	}
 	for (i=0;i<18;i++)
 	{
@@ -276,7 +287,7 @@ char* tohex2(unsigned int value,int maxlen)
 }
 int stobin(const char* s)
 {
-	int i;
+	unsigned int i;
 	int v=0;
 	for (i=0;i<strlen(s);i++)
 	{
@@ -287,7 +298,7 @@ int stobin(const char* s)
 }
 int stooct(const char* s)
 {
-	int i;
+	unsigned int i;
 	int v=0;
 	for (i=0;i<strlen(s);i++)
 	{
@@ -298,7 +309,7 @@ int stooct(const char* s)
 }
 int stoint(const char* s)
 {
-	int i;
+	unsigned int i;
 	int v=0;
 	for (i=0;i<strlen(s);i++)
 	{
@@ -457,7 +468,7 @@ void exit_yesno(WINDOW* parent_window,char* filename)
 }
 void printsearchstring3(WINDOW* parent_window,int y,int x,int offset)
 {
-	int i;
+	unsigned int i;
 	for (i=0;i<10 ;i++)
 	{
 		if ((i+offset)<searchstring3len) {
@@ -471,10 +482,10 @@ void printsearchstring3(WINDOW* parent_window,int y,int x,int offset)
 }
 void kmpPreprocesshex()
 {
-	int i=0;
+	unsigned int i=0;
 	int j=-1;
 	kmp[i]=j;
-	while (i<searchstring2len)
+	while ( i < searchstring2len)
 	{
 		while (j>=0 && searchstring2[i]!=searchstring2[j]) 
 		{
@@ -501,13 +512,14 @@ void kmpPreprocesshexback()
 		kmpback[i]=j;
 	}	
 }
-file_position_t searchforwardhex(file_position_t cursorpos,file_position_t filesize,int hexnotasc)
+file_position_t searchforwardhex( file_position_t cursorpos,
+	                              file_position_t filesize)
 {
 	unsigned char buffer[524288];
-	FILE *writesearchfile;
+	FILE *writesearchfile = NULL;
 	file_position_t cp=cursorpos;
 	file_position_t ocp=cursorpos;
-	file_position_t t;
+	file_position_t t = 0;
 	int i=0;
 	int j=0;
 	int k=sizeof(buffer);
@@ -537,12 +549,20 @@ file_position_t searchforwardhex(file_position_t cursorpos,file_position_t files
 		}
 		while (j>=0 && buffer[k]!=searchstring2[j]) j=kmp[j];
 		k++; j++; cp++;
-		if (j==searchstring2len && t!=ocp+k-j)
+		if ((unsigned int) j == searchstring2len && t!=ocp+k-j)
+		  
 		{
 			//GEFUNDEN
 			t=ocp+k-j;
-			if (writesearch==1) fprintf(writesearchfile,"%04X%04X%04X%04X\n",((int)((t>>48)&65535)),((int)((t>>32)&65535)),((int)((t>>16)&65535)),((int)(t&65535)));
-			else return t;
+			if (writesearch==1) {
+			  fprintf( writesearchfile,"%04X%04X%04X%04X\n", 
+				       ((int)((t>>48)&65535)),
+					   ((int)((t>>32)&65535)),
+					   ((int)((t>>16)&65535)),
+					   ((int)(t&65535)));
+			} else {
+				return t;
+			}
 
 			j=kmp[j];
 		}
@@ -552,24 +572,25 @@ file_position_t searchforwardhex(file_position_t cursorpos,file_position_t files
 }
 file_position_t searchbackwardhex(file_position_t cursorpos,file_position_t filesize,int hexnotasc)
 {
+  /* remove me */ filesize = 0;
+  /* remove me */ hexnotasc = 0;
 	kmpPreprocesshexback();
 	
 	return cursorpos;
 }
 file_position_t searchbackwardhex2(file_position_t cursorpos,file_position_t filesize)
 {
+  /* remove me */ filesize = 0;
 	return cursorpos;
 }
-file_position_t searchforwardhex2(file_position_t cursorpos,file_position_t filesize)
+file_position_t searchforwardhex2(file_position_t cursorpos)
 {
 	file_position_t cp;
-	file_position_t ocp;
+	file_position_t ocp = cursorpos;
 	unsigned char buffer[256];
-	unsigned char b2[2];
 	unsigned char p[524288];
-	int pp=0;
-	FILE *writesearchfile;
-	int i;
+	FILE *writesearchfile = NULL;
+	unsigned int i;
 	int mismatch;
 
 	if (obenanfangen==1 || writesearch==1 || cursorpos==0) readsearchfile=fopen(readsearchfilename,"r");
@@ -612,11 +633,11 @@ int searchfor(WINDOW* parent_window,int hexnotasc)
 	int wleft;
 	int wright;
 	int ch;
-	int ch2=0;
 	char* s;
-	int m,i;
+	int m;
+	unsigned int i;
 	int cursor;
-	int offset;
+	unsigned int offset;
 	int doit=0;
 	wtop=LINES/2-6;
 	wbot=wtop+12;
@@ -750,7 +771,7 @@ int searchfor(WINDOW* parent_window,int hexnotasc)
 							if ((cursor%3)==0) 
 							{
 								searchstring3[i]=(searchstring3[i]&527)+(ch<<4);
-								if ((cursor/3+offset)==searchstring3len)
+								if ((unsigned int) (cursor/3+offset)==searchstring3len)
 								{
 									searchstring3[i]=searchstring3[i]&240;
 									searchstring3len++;
@@ -765,7 +786,7 @@ int searchfor(WINDOW* parent_window,int hexnotasc)
 							if ((cursor%3)==0) 
 							{
 								if ((searchstring3[i]&256)!=256) searchstring3[i]=searchstring3[i]|256;
-								if ((cursor/3+offset)==searchstring3len)
+								if ((unsigned int) (cursor/3+offset)==searchstring3len)
 								{
 									searchstring3[i]=768;
 									searchstring3len++;
@@ -775,7 +796,10 @@ int searchfor(WINDOW* parent_window,int hexnotasc)
 							if ((cursor%3)==1) if ((searchstring3[i]&512)!=512) searchstring3[i]=searchstring3[i]|512;
 							ch=KEY_RIGHT;
 						}
-						if ((ch==KEY_RIGHT) && ((cursor/3+offset<searchstring3len))) {cursor++;if ((cursor%3)==2) cursor++;}
+						if ((ch==KEY_RIGHT) && ((((unsigned int)cursor/3+offset) <searchstring3len))) {
+						  cursor++;
+						  if ((cursor%3)==2) cursor++;
+						}
 						if ((ch==KEY_LEFT)) {
 							cursor--;
 							if ((cursor%3)==2) cursor--;
@@ -784,14 +808,21 @@ int searchfor(WINDOW* parent_window,int hexnotasc)
 						{
 							cursor=27;
 							offset=offset+1;
-							if (offset>=searchstring3len-9) if (searchstring3len>9) offset=searchstring3len-9; else offset=0;
+							if ( offset >= searchstring3len-9) {
+							  if (searchstring3len>9) {
+								offset=searchstring3len-9; 
+							  } else {
+								offset=0;
+							  }
+							}
 						}
 						if (cursor<0) 
 						{
 							cursor=0;
-							offset=offset-1;
+							if (offset) {
+								offset--;
+							}
 						}
-						if (offset<0) offset=0;
 					}
 					
 				} else {
@@ -847,16 +878,19 @@ int searchfor(WINDOW* parent_window,int hexnotasc)
 	}
 	return 0;
 }
-int gotowhere(WINDOW* parent_window,file_position_t ap,file_position_t ap2,file_position_t filesize)
+int gotowhere( WINDOW* parent_window,
+	           file_position_t ap, 
+	           file_position_t ap2,
+			   file_position_t filesize)
 {
 	int wtop;
 	int wbot;
 	int wleft;
 	int wright;
-	unsigned char ch;
 	char* s;
 	file_position_t value;
-	int m,i;
+	int m;
+	unsigned int i;
 	int plus=0;
 	int minus=0;
 	wtop=LINES/2-3;
@@ -914,15 +948,15 @@ int main(int argc,char *argv[])
 	file_position_t p=0;
 
 	file_position_t cp=p;
-	file_position_t np=0;
 	file_position_t filesize;
 	file_position_t rfilesize;
-	file_position_t filesize2;
+	file_position_t filesize2 = 0;
 	file_position_t rfilesize2;
 	file_position_t ap2;
-        file_position_t help;
+    	fpos_t help;
 
-	int i,j;
+	unsigned int i;
+	int j;
 	
 	searchstring=malloc(1);
 	writesearchfilename=malloc(1);
@@ -946,8 +980,12 @@ int main(int argc,char *argv[])
 		exit(1);
 	}
 	fseek(inputfile,0,SEEK_END);
-	fgetpos(inputfile,&help);
+	fgetpos(inputfile, &help);
+#ifdef LINUX
+	filesize = *((file_position_t*) &help);
+#else
 	filesize=(file_position_t)help;
+#endif
 //	filesize=100;
 	rfilesize=filesize;
 	fseek(inputfile,0,SEEK_SET);
@@ -961,26 +999,38 @@ int main(int argc,char *argv[])
 		}
 		fseek(inputfile2,0,SEEK_END);
 		fgetpos(inputfile2,&help);
-		filesize2=(file_position_t)help;
+#ifdef LINUX
+		filesize2= *((file_position_t*) &help);
+#else
+		filesize2= (file_position_t) help;
+#endif
 		rfilesize2=filesize2;
 		fseek(inputfile2,0,SEEK_SET);
 		diffnotedit=1;
 	}
 //	while (!feof(inputfile)) fgets(NULL,1000,inputfile);
-	uimain(argc,argv);
+	uimain();
 	//init();
 	wclear(stdscr);
 	wrefresh(stdscr);
 	
 	init_colors();
 	wattrset(stdscr,attrs[COLOR_HEXFIELD]);
-	for (i=1;i<LINES-1;i++) for (j=0;j<COLS;j++) mvwprintw(stdscr,i,j," ");
+	for (i=1; (int) i < LINES-1;i++) {
+	  for (j=0; j < COLS;j++) {
+		mvwprintw(stdscr,i,j," ");
+	  }
+	}
 	
 	for (;;)
 	{	
 		draw_mainheadline(stdscr,0,argv[1]);
 		wattrset(stdscr,attrs[COLOR_HEXFIELD]);
-		if (diffnotedit==0) print_hex(stdscr,p,cp,filesize,rfilesize,hexnotasc,ch2); else print_hex_diff(stdscr,p,p,filesize,rfilesize,filesize2,rfilesize2,argv[2]);
+		if (diffnotedit==0) {
+		  print_hex(stdscr,p,cp,filesize,rfilesize,hexnotasc,ch2); 
+		} else {
+		  print_hex_diff(stdscr,p,p,filesize,filesize2,argv[2]);
+		}
 		draw_menu(stdscr);
 		ch=getch2();
 		if (hexnotasc==1)
@@ -1033,14 +1083,37 @@ int main(int argc,char *argv[])
 			wclear(stdscr);
 			wrefresh(stdscr);
 			wattrset(stdscr,attrs[COLOR_HEXFIELD]);
-			for (i=1;i<LINES-1;i++) for (j=0;j<COLS;j++) mvwprintw(stdscr,i,j," ");
+			for (i=1; (int) i < LINES-1;i++) {
+			  for (j=0;j<COLS;j++) {
+				mvwprintw(stdscr,i,j," ");
+			  }
+			}
 		}
 		if (diffnotedit==0) 
 		{
 		//	if (ch==KEY_LEFT && cp!=0) {cp--;if (cp<p) p--;}
 			if (ch==KEY_DOWN && cp+cols<filesize) {cp=cp+cols;if (cp>=p+rows*cols) p=p+cols;}
-			if (ch==KEY_UP && cp>=cols) {cp=cp-cols;if (cp<p) {if (p>cols) p=p-cols;else p=0;}}
-			if (ch==KEY_PPAGE && cp>=cols*rows) {cp=cp-cols*rows;if (p>cols*rows) p=p-cols*rows; else p=0;}
+			if (ch==KEY_UP && cp>=cols) {
+			  cp=cp-cols;
+			  if (cp<p) {
+				if (p>cols) {
+				  p=p-cols;
+				} else {
+				  p=0;
+				}
+			  }
+			}
+			if (ch==KEY_PPAGE && cp>=cols*rows) {
+			  cp=cp-cols*rows;
+			  if (p>cols*rows) {
+				p=p-cols*rows; 
+			  } else {
+				p = 0;
+				if (p) {
+					cp = 0;
+				}
+			  }
+			}
 			if (ch==KEY_NPAGE && p+cols*rows<=filesize && cp+cols*rows<=filesize+1) {p=p+cols*rows;cp=cp+cols*rows;}
 		} else {
 			if (ch==KEY_LEFT && p!=0) {p--;}
@@ -1050,8 +1123,6 @@ int main(int argc,char *argv[])
 			if (ch==KEY_NPAGE && ((p+cols*rows/2<=filesize) || (p+cols*rows/2<=filesize2))) {p=p+cols*rows/2;}
 			if (ch==KEY_RIGHT && ((p<filesize) || (p<filesize2))) p++;
 		}
-		if (p<0) p=0;
-		if (cp<0) cp=0;
 		if (ch==KEY_F(1))
 		{
 			ch=searchfor(stdscr,hexnotasc);
@@ -1078,14 +1149,22 @@ int main(int argc,char *argv[])
 			if (hexnotasc==0) 
 			{
 				searchstring2len=strlen(searchstring);
-				for (i=0;i<strlen(searchstring);i++) searchstring2[i]=(int)searchstring[i];
+				for (i=0;i<strlen(searchstring);i++) {
+				  searchstring2[i]=(int)searchstring[i];
+				}
 				
 			} else {
 				searchstring2len=searchstring3len;
-				for (i=0;i<searchstring3len;i++) searchstring2[i]=searchstring3[i];
+				for (i=0;i<searchstring3len;i++) {
+				  searchstring2[i]=searchstring3[i];
+				}
 
 			}
-			if (readsearch==0) cp=searchforwardhex(cp,filesize,hexnotasc); else cp=searchforwardhex2(cp,filesize);
+			if (readsearch==0) {
+			  cp=searchforwardhex(cp,filesize); 
+			} else { 
+			  cp=searchforwardhex2(cp);
+			}
 			p=cp;
 			if (writesearch==1)
 			{
@@ -1125,7 +1204,11 @@ int main(int argc,char *argv[])
 				if (chpos[chnum-1]>rfilesize) 
 				{
 					filesize=rfilesize;
-					for (i=0;i<chnum-1;i++) if (filesize<chpos[i]) filesize=chpos[i]; 
+					for (i=0; (int) i < chnum-1; i++) {
+					  if (filesize<chpos[i]) {
+						filesize=chpos[i]; 
+					  }
+					}
 				}
 				if (p>chpos[chnum-1] || p+cols*rows<chpos[chnum-1]) p=chpos[chnum-1];
 				if (cp>chpos[chnum-1] || cp+cols*rows<chpos[chnum-1]) cp=chpos[chnum-1];
