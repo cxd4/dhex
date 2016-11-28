@@ -14,6 +14,7 @@ Thomas Dettbarn, 30-Dec-2010
 0.60: Initial release
 0.61: Some code cleanup, rudementary manual correlation is possible through 
       commandline parameters
+0.62: Code cleanup, bug fixes, and as new features: bookmarks and ascii-search.
 
 ---------------------------------------------------------[ 1. Getting started ]-
 
@@ -71,6 +72,10 @@ Pressing + will advance the cursors those many bytes,
 Pressing - will go back those many bytes.
 
 Press "Go" to set the cursor, or "Cancel" to quit the dialog.
+
+
+Moreover, you can set up to ten bookmarks here. And save them for later use.
+
 
 
 ---------------------------------------------------------------[ 4. Searching ]-
@@ -196,14 +201,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 --------------------------------------------------------------[ 9. Known bugs ]-
 
-- some colors are not being read properly from the config file
 - Searching has not been thourughly tested.
 - Code is not clean (yet)
 - Searching is only possible in normal mode, not diff mode
-- Searching is only possible for hex-strings. Not ASCII.
 - Searching ignores unsaved changes.
 - Some features are missing
 - -k expects a file to be opened
 - -f might overwrite ANY file.
 - GOTO can jump way behind the end of the file
-- some way of exiting won't free all the allocated buffers
+- some ways of exiting won't free all the allocated buffers

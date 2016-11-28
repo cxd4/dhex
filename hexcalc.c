@@ -10,12 +10,11 @@ void hexcalc(tOutput* output,thHexCalc* hHexCalc)
 {
 	tInt16	offsx;
 	tInt16	offsy;
-	tInt64	svalue;
 	tInt64	akkumulator=0;
 	int i;
 	int j;
 	int cursorline=-1;
-	tInt16	ch;
+	tInt16	ch=0;
 	tUInt64 x;
 	tUInt64	newval=0;
 	tUInt8	dig=0;

@@ -63,9 +63,8 @@ tUInt32 readbuf(tBuffer* hBuf,tInt64 pos)
 			memset(hBuf->data,0,sizeof(tUInt8)*BUFFERSIZE);
 		}
 	}
-	// TODO: apply the changes here
 
-	return OK;
+	return RETOK;
 }
 
 tInt32	getbufferidx(tBuffer* hBuf,tInt64 pos)

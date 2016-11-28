@@ -1,11 +1,13 @@
 CC=		gcc
 LDFLAGS=	-L/usr/lib	-L/usr/local/lib  	-L/usr/lib/ncurses	-L/usr/local/lib/ncurses
 CPPFLAGS=	-I/usr/include	-I/usr/local/include	-I/usr/include/ncurses	-I/usr/local/include/ncurses
-CFLAGS=		-O3
+CFLAGS=		-O3 -Wall -std=c99 
+#CFLAGS+= -ffunction-sections -fdata-sections
+#LDFLAGS+= --gc-sections 
 LIBS=		-lncurses
 DESTDIR=	/usr/local/bin
 
-OFILES=buffers.o input.o output.o machine_type.o main.o menu.o ui.o hexcalc.o search.o gpl.o configfile.o
+OFILES=buffers.o input.o output.o machine_type.o main.o menu.o ui.o hexcalc.o search.o gpl.o configfile.o markers.o
 
 all:	dhex
 

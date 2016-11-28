@@ -10,7 +10,6 @@ tUInt64	getfilepos(tFptr f)
 tUInt64 getfilesize(tFptr f)
 {
 	tUInt64 x;
-	fpos_t pos;
 	fseek(f,0,SEEK_END);
 	x=getfilepos(f);
 

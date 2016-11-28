@@ -5,35 +5,36 @@
 #include "machine_type.h"
 #include "input.h"
 #include "output.h"
+#include "unistd.h"
 
 void initkeytab(tOutput* output)
 {
 	// those values are for mac os x
 	const tKeyTab KeyTab[NUM_SPECIALKEYS]={
 	// key return value (retval),allowed_in_inputfield,seqlen,seq[8],config[16]
-        {KEYF1,         0,2,{0xc2,0xa1,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF1:"},
-        {KEYF2,         0,3,{0xe2,0x84,0xa2,0x00,0x00,0x00,0x00,0x00},"KEYF2:"},
-        {KEYF3,         0,2,{0xc2,0xa3,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF3:"},
-        {KEYF4,         0,2,{0xc2,0xa2,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF4:"},
-        {KEYF5,         0,3,{0xe2,0x88,0x9e,0x00,0x00,0x00,0x00,0x00},"KEYF5:"},
-        {KEYF6,         0,2,{0xc2,0xa7,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF6:"},
-        {KEYF7,         0,2,{0xc2,0xb6,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF7:"},
-        {KEYF8,         0,3,{0xe2,0x80,0xa2,0x00,0x00,0x00,0x00,0x00},"KEYF8:"},
-        {KEYF9,         0,2,{0xc2,0xaa,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF9:"},
-        {KEYF10,        0,2,{0xc2,0xba,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF10:"},
-        {KEYESC,        1,1,{0x1b,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYESC:"},
-        {KEYBACKSPACE,  1,1,{0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYBACKSPACE:"},
-        {KEYDEL,        1,0,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYDEL:"},
-        {KEYENTER,      1,1,{0x0a,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYENTER:"},
-        {KEYTAB,        1,1,{0x09,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYTAB:"},
-        {KEYUP,         0,3,{0x1b,0x5b,0x41,0x00,0x00,0x00,0x00,0x00},"KEYUP:"},
-        {KEYDOWN,       0,3,{0x1b,0x5b,0x42,0x00,0x00,0x00,0x00,0x00},"KEYDOWN:"},
-        {KEYRIGHT,      0,3,{0x1b,0x5b,0x43,0x00,0x00,0x00,0x00,0x00},"KEYRIGHT:"},
-        {KEYLEFT,       0,3,{0x1b,0x5b,0x44,0x00,0x00,0x00,0x00,0x00},"KEYLEFT:"},
-        {KEYPGUP,       0,0,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYPGUP:"},
-        {KEYPGDOWN,     0,0,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYPGDOWN:"},
-        {KEYHOME,       0,0,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYHOME:"},
-        {KEYEND,        0,0,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYEND:"}
+        {KEYESC,        1,1,{0x1b,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYESC:","The standard cancel key"},
+        {KEYF1,         0,2,{0xc2,0xa1,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF1:","This key opens the goto dialog"},
+        {KEYF2,         0,3,{0xe2,0x84,0xa2,0x00,0x00,0x00,0x00,0x00},"KEYF2:","This key opens the search dialog"},
+        {KEYF3,         0,2,{0xc2,0xa3,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF3:","This key jumps to the next search item"},
+        {KEYF4,         0,2,{0xc2,0xa2,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF4:","This key jumps to the previous search item"},
+        {KEYF5,         0,3,{0xe2,0x88,0x9e,0x00,0x00,0x00,0x00,0x00},"KEYF5:","This key openes the hexcalc tool"},
+        {KEYF6,         0,2,{0xc2,0xa7,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF6:","This key is not used yet"},
+        {KEYF7,         0,2,{0xc2,0xb6,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF7:","This key is not used yet"},
+        {KEYF8,         0,3,{0xe2,0x80,0xa2,0x00,0x00,0x00,0x00,0x00},"KEYF8:","This key is not used yet"},
+        {KEYF9,         0,2,{0xc2,0xaa,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF9:","This key is for undo"},
+        {KEYF10,        0,2,{0xc2,0xba,0x00,0x00,0x00,0x00,0x00,0x00},"KEYF10:","This key is for saving and quitting"},
+        {KEYBACKSPACE,  1,1,{0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYBACKSPACE:","Erases a character in input fields"},
+        {KEYDEL,        1,0,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYDEL:","Erases a character in input fields"},
+        {KEYENTER,      1,1,{0x0a,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYENTER:","The standard Enter key"},
+        {KEYTAB,        1,1,{0x09,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYTAB:","This key jumps trough windows and menu items"},
+        {KEYUP,         0,3,{0x1b,0x5b,0x41,0x00,0x00,0x00,0x00,0x00},"KEYUP:","Standard scroll key"},
+        {KEYDOWN,       0,3,{0x1b,0x5b,0x42,0x00,0x00,0x00,0x00,0x00},"KEYDOWN:","Standard scroll key"},
+        {KEYRIGHT,      0,3,{0x1b,0x5b,0x43,0x00,0x00,0x00,0x00,0x00},"KEYRIGHT:","Standard scroll key"},
+        {KEYLEFT,       0,3,{0x1b,0x5b,0x44,0x00,0x00,0x00,0x00,0x00},"KEYLEFT:","Standard scroll key"},
+        {KEYPGUP,       0,0,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYPGUP:","Scrolls up a full page"},
+        {KEYPGDOWN,     0,0,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYPGDOWN:","Scrolls down a full page"},
+        {KEYHOME,       0,0,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYHOME:","Jumps to beginning"},
+        {KEYEND,        0,0,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},"KEYEND:","Jumps to the end"}
 };
 	if (output->pKeyTab) free(output->pKeyTab);
 	output->pKeyTab=malloc(sizeof(tKeyTab)*NUM_SPECIALKEYS);
@@ -61,7 +62,7 @@ tInt16 getkey(tKeyTab* pKeyTab,tBool inputfield)		// =1 this is an inputfield. w
 		{
 			ch=getch();
 
-			if (lastch!=ERR && ch==ERR || seqlen==8) done=1;
+			if ((lastch!=ERR && ch==ERR) || seqlen==8) done=1;
 			if (ch!=ERR)
 			{
 				if (seqlen<8) seq[seqlen++]=ch;
@@ -97,9 +98,9 @@ tInt16 getkey(tKeyTab* pKeyTab,tBool inputfield)		// =1 this is an inputfield. w
 }
 
 
-tInt16 hexinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,tInt16 len)
+tInt16 hexinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,char* relative,tInt16 len)
 {
-	tInt8	e=0;
+	char e;
 	tInt16 i;
 	tInt16 ch;
 	tInt16 done=0;
@@ -107,6 +108,7 @@ tInt16 hexinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,tInt16 len)
 	tUInt64	t;
 
 	newval=*val;
+	if (relative) e=*relative; else e='=';
 	setcolor(output,COLOR_BRACKETS);
 	mvwprintw(output->win,y,x,"[");
 	mvwprintw(output->win,y,x+len+1,"]");
@@ -122,14 +124,10 @@ tInt16 hexinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,tInt16 len)
 			t>>=4;
 			mvwprintw(output->win,y,x+i+2,"%1x",c);
 		}
-		if (e==0) mvwprintw(output->win,y,x+i+2,"=");
-		if (e==1) mvwprintw(output->win,y,x+i+2,"-");
-		if (e==2) mvwprintw(output->win,y,x+i+2,"+");
+		mvwprintw(output->win,y,x+i+2,"%c",e);
 		refresh();
 		ch=getkey(output->pKeyTab,1);
-		if (ch=='=') e=0;
-		if (ch=='-') e=1;
-		if (ch=='+') e=2;
+		if (ch=='=' || ch=='-' || ch=='+') e=ch;
 
 		if (ch>='a' && ch<='f') ch-=32;	// make it uppercase
 		if (ch==KEYENTER) done=1;
@@ -150,11 +148,14 @@ tInt16 hexinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,tInt16 len)
 			newval=newval/16;
 		}		
 	}
-	if (ch!=KEYESC) 
+	if (ch!=KEYESC && relative==NULL) 
 	{
-		if (e==0) *val=newval;
-		if (e==1) *val-=newval;
-		if (e==2) *val+=newval;
+		if (e=='=') *val=newval;
+		if (e=='-') *val-=newval;
+		if (e=='+') *val+=newval;
+	} else if (ch!=KEYESC) {
+		*val=newval;
+		*relative=e;
 	}
 	return ch;
 }
@@ -165,7 +166,7 @@ tInt16 hexinput2(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16* usedlen,tInt1
 	tBool	done=0;
 	tInt16	newusedlen;
 	tBool	nibble=0;
-	tUInt8	newchar;
+	tUInt8	newchar=0;
 	int i;
 	
 	buf=malloc(len);
@@ -209,7 +210,6 @@ tInt16 hexinput2(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16* usedlen,tInt1
 		memcpy(s,buf,len);
 		*usedlen=newusedlen;
 	}
-	free(buf);
 	setcolor(output,COLOR_TEXT);
 	newusedlen=*usedlen;
 	for (i=0;i<len;i++)
@@ -219,6 +219,7 @@ tInt16 hexinput2(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16* usedlen,tInt1
 		else mvwprintw(output->win,y,x+1+i*3,"  ");
 		if (i!=(len-1)) mvwprintw(output->win,y,x+3+i*3," ");
 	}
+	free(buf);
 	return ch;
 }
 tInt16 stringinput(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16 len)
@@ -254,7 +255,8 @@ tInt16 stringinput(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16 len)
 		move(y,x+cursorpos+1);
 		refresh();
 		ch=getkey(output->pKeyTab,1);
-		if (ch==KEYENTER) done=1;
+		if (ch==KEYENTER) 
+			done=1;
 		if (ch==KEYTAB) done=1;
 		if (ch==KEYESC) done=1;
 		if (ch==KEYLEFT && cursorpos) cursorpos--;
@@ -271,19 +273,18 @@ tInt16 stringinput(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16 len)
 		}
 	}
 	if (ch!=KEYESC) memcpy(s,buf,len);
-	free(buf);
 	setcolor(output,COLOR_TEXT);
 	for (i=0;i<len;i++)
 	{
 		mvwprintw(output->win,y,x+i+1,"%c",(i<strlen(s))?s[i]:' ');
 	}
+	free(buf);
 	return ch;
 }
 int	configkeytab(tKeyTab* pKeyTab,char* line)
 {
 	int i;
 	int j;
-	int k;
 	unsigned int x;
 	int retval=1;
 	
@@ -373,6 +374,7 @@ int writeconfigfile(tOutput* output,char* configfilename)
 		fprintf(f,"\n");
 	}
 	fclose(f);
+	return	RETOK;
 }
 void keyboardsetup(tOutput* output,char* configfilename)
 {
@@ -388,14 +390,18 @@ void keyboardsetup(tOutput* output,char* configfilename)
 	mvwprintw(output->win,0,0,"Please press the following keys");
 	mvwprintw(output->win,1,0,"(Press ESC if your keyboard does not have them)");
 	mvwprintw(output->win,3,0,"Config file:%s",configfilename);
+	
 	for (i=0;i<NUM_SPECIALKEYS;i++)
 	{
 		lastkey=-1;
 		done=0;
 		seqlen=0;
 		memset(seq,0,sizeof(seq));
+		mvwprintw(output->win,21,0,"                                                                ");
+		mvwprintw(output->win,21,0,"%s",pKeyTab[i].desc);
 		if (i<12) mvwprintw(output->win,5+i,0,"%s",pKeyTab[i].config);
 		else mvwprintw(output->win,i-7,40,"%s",pKeyTab[i].config);
+		memset(pKeyTab[i].seq,0,8);
 		while (!done)
 		{	
 			ch=getch();
@@ -406,7 +412,9 @@ void keyboardsetup(tOutput* output,char* configfilename)
 		pKeyTab[i].seqlen=seqlen;
 		memcpy(pKeyTab[i].seq,seq,seqlen);
 		if (pKeyTab[i].retval==KEYESC) keyesc=i;
-		for (j=0;j<seqlen;j++)
+		else 
+			if (memcmp(pKeyTab[i].seq,pKeyTab[keyesc].seq,8)==0 && i!=keyesc) pKeyTab[i].seqlen=0;
+		for (j=0;j<pKeyTab[i].seqlen;j++)
 		{
 			if (i<12) mvwprintw(output->win,5+i,15+j*3,"%02x",seq[j]);
 			else mvwprintw(output->win,i-7,55+j*3,"%02x",seq[j]);

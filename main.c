@@ -1,12 +1,13 @@
 #define	MAJORVERSION	0
 #define	MINORVERSION	6
-#define	REVISION	1
+#define	REVISION	2
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <string.h>
 #include <ncurses.h>
 #include "menu.h"
+#include "configfile.h"
 #include "machine_type.h"
 #include "input.h"
 #include "output.h"
@@ -15,12 +16,12 @@
 #include "hexcalc.h"
 #include "search.h"
 #include "gpl.h"
+#include "markers.h"
 
-char configfile[512];
 void welcomescreen(char* argv0)
 {
 	fprintf(stderr,"*** DHEX %i.%i%i\n",MAJORVERSION,MINORVERSION,REVISION);
-	fprintf(stderr,"*** (C)opyleft 2010 by Thomas Dettbarn\n");
+	fprintf(stderr,"*** (C)opyleft 2011 by Thomas Dettbarn\n");
 	fprintf(stderr,"*** dettus@dettus.net (include DHEX somewhere in the subject)\n\n");
 	fprintf(stderr,"\n");
 	fprintf(stderr,"(start it with %s -gpl to see the license)\n",argv0);
@@ -43,15 +44,15 @@ void welcomescreen(char* argv0)
 }
 void helpscreen(char* argv0,int exitval)
 {
-	endwin();
 	welcomescreen(argv0);
 	fprintf(stderr,"%s [Parameters]: General parameters\n",argv0);
 	fprintf(stderr," -h, -H, -?                 show this help\n");
 	fprintf(stderr," -v, -V                     show the version number %i.%i%i\n",MAJORVERSION,MINORVERSION,REVISION);
-        //fprintf(stderr," -k, -K                     start the keyboard setup (TODO)\n");
+        fprintf(stderr," -k, -K                     start the keyboard setup manually\n");
 	//fprintf(stderr," -x, -X                     start the hexcalc program (TODO)\n");
 	fprintf(stderr," -g, -G                     show the license\n");
 	fprintf(stderr," -f, -F [configfile]        read the config from [configfile]\n");
+	fprintf(stderr," -m, -M [markerfile]        read the bookmarks from [markerfile]\n");
 	fprintf(stderr,"\n");
 	fprintf(stderr,"%s [Parameters] [Filename]: Edit a single file\n",argv0);
 	fprintf(stderr," -ob, -OB [x]                 set the cursor to [x] (binary)\n");
@@ -66,9 +67,8 @@ void helpscreen(char* argv0,int exitval)
 	fprintf(stderr," -o1b, -O1B [x] -o2b, -O2B [y]  set the cursors to [x] and [y] (binary)\n");
 	fprintf(stderr," -o1d, -O1D [x] -o2d, -O2D [y]  set the cursors to [x] and [y] (decimal)\n");
 	fprintf(stderr," -o1h, -O1H [x] -o2h, -O2H [y]  set the cursors to [x] and [y] (hexadecimal)\n");
-	fprintf(stderr," -o1o, -O1O [x] -o2o, -O2O [y]  set the cursors to [x] and [u] (octal)\n");
+	fprintf(stderr," -o1o, -O1O [x] -o2o, -O2O [y]  set the cursors to [x] and [y] (octal)\n");
 	//fprintf(stderr," -c, -C [corrlen]           find the best correlation between the files (TODO)\n");
-	//fprintf(stderr," -o, -O [x,y]               set the first cursor to [x] and the second to [y] (TODO)\n");
 	exit(exitval);
 }
 int parsecursorpos(tInt64* cursorpos1,tInt64* cursorpos2,char* lastopt,char* argv)
@@ -114,7 +114,7 @@ int parsecursorpos(tInt64* cursorpos1,tInt64* cursorpos2,char* lastopt,char* arg
 	return RETOK;	
 	
 }
-int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* cursorpos2,tBool* diffmode,int* filename1,int* filename2,tBool* keyboardsetupreq)
+int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* cursorpos2,tBool* diffmode,int* filename1,int* filename2,tBool* keyboardsetupreq,char* markerfilename,char* configfile)
 {
 	int filenamecnt=0;
 	int i;
@@ -142,7 +142,6 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* curs
 						break;
 				case 'g':
 				case 'G':
-						endwin();
 						print_gpl();		// print the gpl and be done with it
 						exit(1);
 						lastopt[0]=0;
@@ -191,6 +190,10 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* curs
 				case 'o':	
 						retval=parsecursorpos(cursorpos1,cursorpos2,lastopt,argv[i]);
 						break;
+				case 'm':
+				case 'M':
+						if (markerfilename) memcpy(markerfilename,argv[i],64);
+						break;
 				default:
 						retval=RETNOK;	
 						break;
@@ -216,7 +219,6 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* cursorpos1,tInt64* curs
 }
 int main(int argc,char** argv)
 {
-	int i;
 //	tBuffer buf1;
 //	tBuffer buf2;
 	thHexCalc*	hHexCalc=NULL;
@@ -232,20 +234,23 @@ int main(int argc,char** argv)
 	tInt64 oldcursorpos2;
 	tInt64 oldfirstpos2;
 	tSearch search;
+	tMarkers* markers;
+	char	markerfilename[64];
 	
 	tUInt8	windowfield=0;	// 0=hex field buffer 1, 1=ascii field buffer 1, 2=hex field buffer 2, 3=ascii field buffer 2
-	tBool	nibble;
 	tBool	diffmode=0;
-	tUInt8	nexthex;
 	tBool	keyboardsetupreq;
 	int	retval;
 	
 	int ch;
-	unsigned char text[64];
 	int filename1=-1;
 	int filename2=-1;
+	char* homedir;
+	char configfile[512];
 
-	snprintf(configfile,512,"%s/.dhexrc",getenv("HOME"));
+	memset(configfile,0,512);
+	memset(markerfilename,0,64);
+	markers=initmarkers();
 	output=malloc(sizeof(tOutput));
 	memset(output,0,sizeof(tOutput));
 	initcolors(output);
@@ -254,15 +259,42 @@ int main(int argc,char** argv)
 	keyboardsetupreq=0;
 	cursorpos1=0;
 	cursorpos2=0;
-	if (parsecommandlineoptions(argc,argv,&cursorpos1,&cursorpos2,&diffmode,&filename1,&filename2,&keyboardsetupreq)!=RETOK)
+	if (parsecommandlineoptions(argc,argv,&cursorpos1,&cursorpos2,&diffmode,&filename1,&filename2,&keyboardsetupreq,markerfilename,configfile)!=RETOK)
 	{
 		if (output)
 		{
 			if (output->pKeyTab) free(output->pKeyTab);
 			free(output);
 		}
+		if (markers) free(markers);
 		helpscreen(argv[0],0);
 	}
+	if (configfile[0]==0)
+	{
+		homedir=getenv("HOME");
+		if (homedir==NULL)
+		{
+			fprintf(stderr,"$HOME-variable not set. \n\n");
+			fprintf(stderr,"I'm sorry, but you'll have to provide a config-file by using\n");
+			fprintf(stderr,"%s -f /PATHTOCONFIGFILE/.dhexrc\n",argv[0]);
+			exit(0);
+		} else {
+			snprintf(configfile,512,"%s/.dhexrc",homedir);
+		}
+	}
+
+	if (markerfilename[0])	if (parsemarkerfile(markers,markerfilename)!=RETOK)
+	{
+		if (output)
+		{
+			if (output->pKeyTab) free(output->pKeyTab);
+			free(output);
+		}
+		if (markers) free(markers);
+		helpscreen(argv[0],0);
+		
+	}
+	
 	if (filename1==-1 || (filename2==-1 && diffmode)) helpscreen(argv[0],0);
 	retval=readconfigfile(output,configfile);
 	if (retval==1)		// config file did not exists. creating one
@@ -298,8 +330,8 @@ int main(int argc,char** argv)
 	}
 	if (retval==2) keyboardsetupreq=1;
 
-	hHexCalc=malloc(sizeof(hHexCalc));
-	memset(hHexCalc,0,sizeof(hHexCalc));
+	hHexCalc=malloc(sizeof(thHexCalc));
+	memset(hHexCalc,0,sizeof(thHexCalc));
 	buf1=malloc(sizeof(tBuffer));
 	memset(buf1,0,sizeof(tBuffer));
 	if (diffmode)
@@ -330,7 +362,6 @@ int main(int argc,char** argv)
 	clearsearch(&search);
 	while (ch!=KEYF10)
 	{	
-		tInt64	maxbufsize;
 		printmainmenu(output,diffmode);
 		if (diffmode)
 			printbufferdiff(output,buf1,buf2,cursorpos1,cursorpos2);
@@ -338,8 +369,8 @@ int main(int argc,char** argv)
 			printbuffersingle(output,buf1,cursorpos1,firstpos1,windowfield);
 		ch=getkey((tKeyTab*)output->pKeyTab,1);
 
-#define	MOVEMENTDEFINE(KEY,mvchar,mvline,mvpage)	\
-if (ch==KEY)	\
+#define	MOVEMENTDEFINE(KEY,VIKEY,mvchar,mvline,mvpage)	\
+if (ch==KEY || (VIKEY && ch==VIKEY && windowfield==0))	\
 {	\
 	tInt32	err;	\
 	oldfirstpos1=firstpos1;	\
@@ -362,15 +393,15 @@ if (ch==KEY)	\
 		cursorpos2=oldcursorpos2;	\
 	}	\
 }
-		MOVEMENTDEFINE(KEYRIGHT		, 1, 0, 0);
-		MOVEMENTDEFINE(KEYLEFT		,-1, 0, 0);
-		MOVEMENTDEFINE(KEYDOWN		, 0, 1, 0);
-		MOVEMENTDEFINE(KEYUP		, 0,-1, 0);
-		MOVEMENTDEFINE(KEYPGDOWN	, 0, 0, 1);
-		MOVEMENTDEFINE(KEYPGUP		, 0, 0,-1);
+		MOVEMENTDEFINE(KEYRIGHT,'l'	, 1, 0, 0);
+		MOVEMENTDEFINE(KEYLEFT,'h'	,-1, 0, 0);
+		MOVEMENTDEFINE(KEYDOWN,'j'	, 0, 1, 0);
+		MOVEMENTDEFINE(KEYUP,'k'	, 0,-1, 0);
+		MOVEMENTDEFINE(KEYPGDOWN,' '	, 0, 0, 1);
+		MOVEMENTDEFINE(KEYPGUP,0	, 0, 0,-1);
 
 #undef	MOVEMENTDEFINE
-		if (ch==KEYHOME)
+		if (ch==KEYHOME || (ch=='^' && windowfield==0))
 		{
 			if (diffmode)
 			{
@@ -393,7 +424,7 @@ if (ch==KEY)	\
 				firstpos1=cursorpos1=0;
 			}
 		}
-		if (ch==KEYEND)
+		if (ch==KEYEND || (ch=='$' && windowfield==0))
 		{
 			if (diffmode)
 			{
@@ -415,19 +446,23 @@ if (ch==KEY)	\
 			}
 		}
 		if (ch==KEYTAB) {windowfield=(windowfield+1)&1;}
-		if (ch==KEYF1 && !diffmode)	{
-			if (gotomask(output,&cursorpos1)==RETOK)
+		if ((ch==KEYF1 || (ch==':' && windowfield==0))&& !diffmode)	{
+			if (gotomask(output,markers,&cursorpos1)==RETOK)
 			{
 				firstpos1=cursorpos1;	
 			}
 		}
-		if (ch==KEYF2 && !diffmode)	
+		if ((ch==KEYF2 || ((ch=='/' || ch=='?') && (windowfield==0))) && !diffmode)	
 		{
+			if (ch=='/')	search.forwardnotbackward=1;	// / means forward
+			if (ch=='?')	search.forwardnotbackward=0;	// ? means backward
 			searchmask(output,&search,buf1,&cursorpos1);
 			firstpos1=cursorpos1;
 		}
-		if (ch==KEYF3 || ch==KEYF4)
+		if (ch==KEYF3 || ch==KEYF4 || (windowfield==0 && (ch=='n' || ch=='N')))
 		{
+			if (ch=='n')	ch=KEYF3;	// n=next
+			if (ch=='N')	ch=KEYF4;	// N=previous
 			if (diffmode)
 			{
 				tInt64	actcursorpos1=cursorpos1;
@@ -476,7 +511,7 @@ if (ch==KEY)	\
 			}
 		}	
 		if (ch==KEYF5)	hexcalc(output,hHexCalc);
-		if (ch==KEYF9 && !diffmode)
+		if ((ch==KEYF9 || (ch=='u' && windowfield==0)) && !diffmode)
 		{
 			if (buf1->changesnum) 
 			{
@@ -530,7 +565,8 @@ if (ch==KEY)	\
 	if (buf1) free(buf1);
 	if (buf2) free(buf2);
 	if (hHexCalc)	free(hHexCalc);
-	endwin();
+	if (markers)	free(markers);
+	if (output->win) endwin();
 	welcomescreen(argv[0]);
 	return 0;
 }

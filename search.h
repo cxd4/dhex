@@ -11,7 +11,7 @@ typedef	struct	_tSearch
 	tBool	readsearchlog;
 	tBool	forwardnotbackward;
 	char	searchstring[32];
-	tInt8	searchlen;
+	tInt16	searchlen;
 	tInt64	occurancesfound;
 	tInt64	lastoccurance;
 	tInt64	lastsearchlogpos;

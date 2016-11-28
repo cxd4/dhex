@@ -1,7 +1,5 @@
-- colors from the configfile
 - write the documentation
 - error: when searching, the changes are being ignored
-- feature: markers
 - feature: correlation
 - feature: snapshot
 - the length of input fields is restricted by the gui

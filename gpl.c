@@ -375,8 +375,8 @@ const unsigned char gpltxt[10793]={
 	0x19,0x1b,0x01,0x91,0x06,0xb1,0x25,0x7a,0xc3
 };
 	int i;
-	char c;
-	int newlinecnt;
+	char c=0;
+	int newlinecnt=0;
 	for (i=0;i<sizeof(gpltxt);i++)
 	{
 		if (codebook[gpltxt[i]])

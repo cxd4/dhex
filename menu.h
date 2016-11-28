@@ -20,7 +20,7 @@ typedef struct _tMenu
 	int menuitemactive;
 } tMenu;
 
-void clearmenu(tMenu* Menu);
+void clearMenu(tMenu* Menu);
 void newMenuItem(tMenu* Menu,char* text,tUInt16 y,tUInt16 x,char hotkey,tBool active,tInt8* itemnum);
 void printMenu(tOutput* output,tMenu* Menu,tUInt16 offsy,tUInt16 offsx);
 void MenuMoveLeft(tMenu* Menu);

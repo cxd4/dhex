@@ -39,12 +39,15 @@ typedef struct  _tKeyTab
         tInt16	retval;
         tBool	allowed_in_inputfield;
         tUInt8	seqlen;
-        unsigned char seq[8];		// which sequence will be returned when this key is pressed
-        unsigned char config[16];	// what string is written in the config-file
+        char seq[8];		// which sequence will be returned when this key is pressed
+        char config[16];	// what string is written in the config-file
+	char desc[64];
 } tKeyTab;
 
+void initkeytab(tOutput* output);
 tInt16 getkey(tKeyTab* pKeyTab,tBool inputfield);
-tInt16 hexinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,tInt16 len);
+tInt16 hexinput(tOutput* output,tInt16 y,tInt16 x,tUInt64* val,char* relative,tInt16 len);
+tInt16 hexinput2(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16* usedlen,tInt16 len);
 tInt16 stringinput(tOutput* output,tInt16 y,tInt16 x,char* s,tInt16 len);
 int configkeytab(tKeyTab* pKeyTab,char* line);
 void keyboardsetup(tOutput* output,char* configfilename);

@@ -17,11 +17,9 @@ tInt8	searchfor(tSearch* search,tBuffer* buf,tUInt64* cursorpos,tBool nextnotpre
 	tInt64	oldcursorpos=*cursorpos;
 	tBool	forward;
 	tBool	done;
-	tBool	found;
+	tBool	found=0;
 	tFptr	fwlog;
 	tFptr	frlog;
-	char	line[64];
-	tUInt64	x;
 	unsigned char c;
 	tInt32	idx;
 	tBool	increment;
@@ -121,4 +119,5 @@ tInt8	searchfor(tSearch* search,tBuffer* buf,tUInt64* cursorpos,tBool nextnotpre
 	{
 		*cursorpos=actcursorpos;
 	}
+	return RETOK;
 }

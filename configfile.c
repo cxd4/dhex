@@ -78,7 +78,7 @@ int getcolors(tOutput* output,char* line)
 	int attrs1;
 	int attrs2;
 	int attrsret;
-	short fg,bg;
+	short fg=7,bg=0;
 	
 	l=strlen(line);
 	memset(token,0,sizeof(token));
@@ -156,6 +156,7 @@ int getcolors(tOutput* output,char* line)
 			colorpair(output,colorGroups[i].uicol,fg,bg,attrsret);
 		}
 	}
+	return	RETOK;
 }
 int readconfigfile(tOutput* output,char* filename)
 {
@@ -163,9 +164,6 @@ int readconfigfile(tOutput* output,char* filename)
 	unsigned char line[512];
 	unsigned char c;
 	int lineidx=0;
-	short	fg;
-	short	bg;
-	int	attrs;
 	int	keyboardcnt;
 	if (!f) return 1;
 	keyboardcnt=0;

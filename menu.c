@@ -39,7 +39,7 @@ void printMenu(tOutput* output,tMenu* Menu,tUInt16 offsy,tUInt16 offsx)
 				if (Menu->MenuItems[i].menutext[j]==Menu->MenuItems[i].hotkey || (Menu->MenuItems[i].hotkey>='A' && Menu->MenuItems[i].hotkey<='Z' && Menu->MenuItems[i].menutext[j]-32==Menu->MenuItems[i].hotkey))
 				{
 					setcolor(output,(i==Menu->menuitemactive)?COLOR_MENUHOTKEYACTIVE:COLOR_MENUHOTKEY);
-					mvwprintw(output->win,offsy+Menu->MenuItems[i].y,offsx+Menu->MenuItems[i].x,"%c",Menu->MenuItems[i].menutext[j]);
+					mvwprintw(output->win,offsy+Menu->MenuItems[i].y,offsx+Menu->MenuItems[i].x+j,"%c",Menu->MenuItems[i].menutext[j]);
 					j=65;
 				}
 			}

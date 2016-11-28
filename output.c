@@ -16,7 +16,7 @@ void initcolors(tOutput* output)
 	output->colors[COLOR_HEXFIELD].fg	=COLOR_WHITE;	output->colors[COLOR_HEXFIELD].bg	=COLOR_BLACK;	output->colors[COLOR_HEXFIELD].attrs	=0;
 	output->colors[COLOR_DIFF].fg		=COLOR_YELLOW;	output->colors[COLOR_DIFF].bg		=COLOR_BLACK;	output->colors[COLOR_DIFF].attrs	=A_BOLD;
 	output->colors[COLOR_HEADLINE].fg	=COLOR_BLUE;	output->colors[COLOR_HEADLINE].bg	=COLOR_BLACK;	output->colors[COLOR_HEADLINE].attrs	=A_BOLD;
-	output->colors[COLOR_INFO].fg		=COLOR_WHITE;	output->colors[COLOR_INFO].bg		=COLOR_BLACK;	output->colors[COLOR_INFO].attrs	=A_BOLD;
+//	output->colors[COLOR_INFO].fg		=COLOR_WHITE;	output->colors[COLOR_INFO].bg		=COLOR_BLACK;	output->colors[COLOR_INFO].attrs	=A_BOLD;
 	output->colors[COLOR_HEADER].fg		=COLOR_BLACK;	output->colors[COLOR_HEADER].bg		=COLOR_CYAN;	output->colors[COLOR_HEADER].attrs	=0;
 	output->colors[COLOR_MENUHOTKEY].fg	=COLOR_YELLOW;	output->colors[COLOR_MENUHOTKEY].bg	=COLOR_BLACK;	output->colors[COLOR_MENUHOTKEY].attrs	=A_BOLD;
 	output->colors[COLOR_MENUNORMAL].fg	=COLOR_CYAN;	output->colors[COLOR_MENUNORMAL].bg	=COLOR_BLACK;	output->colors[COLOR_MENUNORMAL].attrs	=A_BOLD;
@@ -42,7 +42,6 @@ void pairsinit(tOutput* output)
 }
 void setcolor(tOutput* output,uicolors col)
 {
-	int num;
 	wattrset(output->win,output->attrs[col]);
 }
 
@@ -89,7 +88,6 @@ void printbuffersingle(tOutput* output,tBuffer* hBuf1,tInt64 cursorpos1,tUInt64 
 	int bytesperline;
 	tInt32 intpos1;
 	tInt32 charcnt;
-	unsigned char hex[16]={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 
 
 
@@ -108,12 +106,12 @@ void printbuffersingle(tOutput* output,tBuffer* hBuf1,tInt64 cursorpos1,tUInt64 
 	if (addrwidth==16)
 	{
 		mvwprintw(output->win,0,1,"[                /                ]");
-		setcolor(output,COLOR_INFO);
+		setcolor(output,COLOR_TEXT);
 		mvwprintw(output->win,0,2,"%16llX",cursorpos1);
 		mvwprintw(output->win,0,19,"%16llX",hBuf1->bufsize);
 	} else {
 		mvwprintw(output->win,0,1,"[        /        ]");
-		setcolor(output,COLOR_INFO);
+		setcolor(output,COLOR_TEXT);
 		mvwprintw(output->win,0,2,"%8X",(tUInt32)cursorpos1);
 		mvwprintw(output->win,0,11,"%8X",(tUInt32)hBuf1->bufsize);
 	}
@@ -198,13 +196,14 @@ void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursor
 {
 	int i;
 	int j;
-	int k;
 	int addrwidth;
 	int bytesperline;
 	tInt32 intpos1;
+	tInt32 intpos1b;
 	tInt32 intpos2;
+	tInt32 intpos2b;
 	tInt32 charcnt;
-
+	uicolors oldcolor;
 
 
 	addrwidth=(hBuf1->bufsize>0xffffffffull || hBuf2->bufsize>0xffffffffull)?16:8;
@@ -230,7 +229,7 @@ void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursor
 	{
 		mvwprintw(output->win,0,1,"[                /                ]");
 		mvwprintw(output->win,LINES/2,1,"[                /                ]");
-		setcolor(output,COLOR_INFO);
+		setcolor(output,COLOR_TEXT);
 		mvwprintw(output->win,0,2,"%16llX",cursorpos1);
 		mvwprintw(output->win,0,19,"%16llX",hBuf1->bufsize);
 		mvwprintw(output->win,LINES/2,2,"%16llX",cursorpos1);
@@ -238,7 +237,7 @@ void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursor
 	} else {
 		mvwprintw(output->win,0,1,"[        /        ]");
 		mvwprintw(output->win,LINES/2,1,"[        /        ]");
-		setcolor(output,COLOR_INFO);
+		setcolor(output,COLOR_TEXT);
 		mvwprintw(output->win,0,2,"%8X",(tUInt32)cursorpos1);
 		mvwprintw(output->win,0,11,"%8X",(tUInt32)hBuf1->bufsize);
 		mvwprintw(output->win,LINES/2,2,"%8X",(tUInt32)cursorpos2);
@@ -264,16 +263,18 @@ void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursor
 	if (intpos1>=0 || intpos2>=0)
 	{
 		charcnt=0;
+		intpos1b=intpos1;
+		intpos2b=intpos2;
+
 		for (i=0;i<(LINES+1)/2-2;i++)
 		{
 			setcolor(output,COLOR_HEXFIELD);
 			if (addrwidth==8)	mvwprintw(output->win,i+1,0, "% 8X    ",(tUInt32)cursorpos1);
 			else			mvwprintw(output->win,i+1,0,"% 16llX    ",cursorpos1);
-			if (addrwidth==8)	mvwprintw(output->win,i+1+LINES/2,0, "% 8X    ",(tUInt32)cursorpos2);
-			else			mvwprintw(output->win,i+1+LINES/2,0,"% 16llX    ",cursorpos2);
 
 			mvwprintw(output->win,i+1,COLS-bytesperline-5,"      ");
-			mvwprintw(output->win,i+1+LINES/2,COLS-bytesperline-5,"      ");
+			oldcolor=COLOR_HEXFIELD;
+			wmove(output->win,i+1,addrwidth+3);
 			for (j=0;j<bytesperline;j++)
 			{
 				tInt16	c1,c2;
@@ -281,25 +282,28 @@ void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursor
 				else	c1=-1;
 				if ((intpos2+j)>=0 && (intpos2+j)<hBuf2->filesize) c2=hBuf2->data[intpos2+j];
 				else	c2=-1;
-				if (c1!=c2) setcolor(output,COLOR_DIFF);
+				if (c1!=c2 && oldcolor==COLOR_HEXFIELD)
+				{
+					setcolor(output,COLOR_DIFF);
+					oldcolor=COLOR_DIFF;
+				} else if (c1==c2) {
+					setcolor(output,COLOR_HEXFIELD);
+					oldcolor=COLOR_HEXFIELD;
+				}
+				wprintw(output->win," ");
+				if (j!=(bytesperline-1))
+				{
+					if (!(j&7)) wprintw(output->win," ");
+				}
 				if (c1>=0)
 				{
-					mvwprintw(output->win,i+1,addrwidth+3+j*3+j/8,"%02x",c1&0xff);
+					wprintw(output->win,"%02x",(c1&0xff));
 				}
 				else
-					mvwprintw(output->win,i+1,addrwidth+3+j*3+j/8,"  ");
+					wprintw(output->win,"  ");
 
-				if (c2>=0)
-				{
-					mvwprintw(output->win,i+1+LINES/2,addrwidth+3+j*3+j/8,"%02x",c2&0xff);
-				}
-				else
-					mvwprintw(output->win,i+1+LINES/2,addrwidth+3+j*3+j/8,"  ");
-
-				setcolor(output,COLOR_HEXFIELD);
-				mvwprintw(output->win,i+1,addrwidth+5+j*3+j/8,"   ");
-				mvwprintw(output->win,i+1+LINES/2,addrwidth+5+j*3+j/8,"   ");
 			}
+			wmove(output->win,i+1,COLS-bytesperline);
 			for (j=0;j<bytesperline;j++)
 			{
 				unsigned char c1,c2;
@@ -310,14 +314,90 @@ void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursor
 					c2=hBuf2->data[intpos2];
 				else c2=' ';
 
-				if (c1!=c2) setcolor(output,COLOR_DIFF);
-				mvwprintw(output->win,i+1,COLS-bytesperline+j,"%c",(c1>=32 && c1<127)?c1:'.');
-				mvwprintw(output->win,i+1+LINES/2,COLS-bytesperline+j,"%c",(c2>=32 && c2<127)?c2:'.');
+				if (c1!=c2 && oldcolor==COLOR_HEXFIELD)
+				{
+					setcolor(output,COLOR_DIFF);
+					oldcolor=COLOR_DIFF;
+				} else if (c1==c2) {
+					setcolor(output,COLOR_HEXFIELD);
+					oldcolor=COLOR_HEXFIELD;
+				}
+				wprintw(output->win,"%c",(c1>=32 && c1<127)?c1:'.');
 				intpos1++;
 				cursorpos1++;
 				intpos2++;
+			}
+		}
+		oldcolor=COLOR_HEXFIELD;
+		setcolor(output,COLOR_HEXFIELD);
+		if (!(LINES&1))
+		{
+			wmove(output->win,LINES/2-1,0);
+			for (i=0;i<COLS;i++) wprintw(output->win," ");
+		}
+
+		intpos1=intpos1b;
+		intpos2=intpos2b;
+		for (i=0;i<(LINES+1)/2-2;i++)
+		{
+			setcolor(output,COLOR_HEXFIELD);
+			if (addrwidth==8)	mvwprintw(output->win,i+1+LINES/2,0, "% 8X    ",(tUInt32)cursorpos2);
+			else			mvwprintw(output->win,i+1+LINES/2,0,"% 16llX    ",cursorpos2);
+
+			mvwprintw(output->win,i+1+LINES/2,COLS-bytesperline-5,"      ");
+			oldcolor=COLOR_HEXFIELD;
+			wmove(output->win,i+1+LINES/2,addrwidth+3);
+			for (j=0;j<bytesperline;j++)
+			{
+				tInt16	c1,c2;
+				if ((intpos1+j)>=0 && (intpos1+j)<hBuf1->filesize) c1=hBuf1->data[intpos1+j];
+				else	c1=-1;
+				if ((intpos2+j)>=0 && (intpos2+j)<hBuf2->filesize) c2=hBuf2->data[intpos2+j];
+				else	c2=-1;
+				if (c1!=c2 && oldcolor==COLOR_HEXFIELD)
+				{
+					setcolor(output,COLOR_DIFF);
+					oldcolor=COLOR_DIFF;
+				} else if (c1==c2) {
+					setcolor(output,COLOR_HEXFIELD);
+					oldcolor=COLOR_HEXFIELD;
+				}
+				wprintw(output->win," ");
+				if (j!=(bytesperline-1))
+				{
+					if (!(j&7)) wprintw(output->win," ");
+				}
+				if (c2>=0)
+				{
+					wprintw(output->win,"%02x",(c2&0xff));
+				}
+				else
+					wprintw(output->win,"  ");
+
+			}
+			wmove(output->win,i+1+LINES/2,COLS-bytesperline);
+			for (j=0;j<bytesperline;j++)
+			{
+				unsigned char c1,c2;
+				if (intpos1>=0 && intpos1<hBuf1->filesize)
+					c1=hBuf1->data[intpos1];
+				else c1=' ';
+				if (intpos2>=0 && intpos2<hBuf2->filesize)
+					c2=hBuf2->data[intpos2];
+				else c2=' ';
+
+				if (c1!=c2 && oldcolor==COLOR_HEXFIELD)
+				{
+					setcolor(output,COLOR_DIFF);
+					oldcolor=COLOR_DIFF;
+				} else if (c1==c2) {
+					setcolor(output,COLOR_HEXFIELD);
+					oldcolor=COLOR_HEXFIELD;
+				}
+				wprintw(output->win,"%c",(c2>=32 && c2<127)?c2:'.');
+				intpos1++;
+				intpos2++;
 				cursorpos2++;
- 				setcolor(output,COLOR_HEXFIELD);
 			}
 		}
 	}
@@ -355,11 +435,11 @@ void printmainmenu(tOutput* output,tBool diffmode)
 	x=0;
 	for (i=0;i<10;i++)
 	{
-		mvwprintw(output->win,LINES-1,x,"%i",(i+1)%10);
+		mvwprintw(output->win,LINES-1,x," %i",(i+1)%10);
 		x+=8;
 	}
 	setcolor(output,COLOR_MENUNORMAL);
-	x=1;
+	x=2;
 	for (i=0;i<10;i++)
 	{
 		mvwprintw(output->win,LINES-1,x,"%s",diffmode?menutextsdiff[i]:menutextsnodiff[i]);
