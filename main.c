@@ -19,6 +19,10 @@
 #include "markers.h"
 #include "correlation.h"
 
+void terminate_ncurses() {
+	endwin();
+}
+
 void welcomescreen(char* argv0)
 {
 	fprintf(stderr,"*** DHEX %i.%i%i\n",MAJORVERSION,MINORVERSION,REVISION);
@@ -402,6 +406,7 @@ int main(int argc,char** argv)
 	char* homedir;
 	char configfile[512];
 
+	atexit(terminate_ncurses);
 	memset(configfile,0,512);
 	memset(markerfilename,0,64);
 	markers=initmarkers();
