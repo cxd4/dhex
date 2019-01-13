@@ -740,16 +740,16 @@ int main(int argc,char** argv)
 				}
 			}
 		}
-		if (output)
-		{
-			if (output->pKeyTab) free(output->pKeyTab);
-			free(output);
-		}
 		if (buf1) free(buf1);
 		if (buf2) free(buf2);
 		if (hHexCalc)	free(hHexCalc);
 		if (markers)	free(markers);
 		if (output->win) endwin();
+		if (output)
+		{
+			if (output->pKeyTab) free(output->pKeyTab);
+			free(output);
+		}
 		welcomescreen(argv[0]);
 	} else {
 		if (gosearch1) fprintf(stderr,"%lli occurances found in %s\n",search1.occurancesfound,buf1->filename);
