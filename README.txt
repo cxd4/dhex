@@ -250,4 +250,3 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 - -k expects a file to be opened
 - -f might overwrite ANY file.
 - GOTO can jump way behind the end of the file
-- some ways of exiting won't free all the allocated buffers
