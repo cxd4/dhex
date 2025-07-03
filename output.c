@@ -181,13 +181,17 @@ void printbuffersingle(tOutput* output,tBuffer* hBuf1,tInt64 cursorpos1,tUInt64 
 						setcolor(output,COLOR_DIFF);
 						c=hBuf1->changes[k].after;
 					}
-				}	
-				if (cursorpos1==firstpos1 && windowfield==1) setcolor(output,COLOR_INPUT);
+				}
+
+				if (cursorpos1 == firstpos1 && (windowfield == 0 || windowfield == 1)) {
+					setcolor(output, COLOR_INPUT);
+				}
+
 				//  TODO: setcolor(buf1->data[intpos1]!=buf2->data[intpos2]?COLOR_DIFF:COLOR_HEXFIELD);
 				mvwprintw(output->win,i+1,COLS-bytesperline+j,"%c",(c>=32 && c<127)?c:'.');
 				intpos1++;
 				firstpos1++;
- 				setcolor(output,COLOR_HEXFIELD);
+				setcolor(output, COLOR_HEXFIELD);
 			}
 		}
 	}
