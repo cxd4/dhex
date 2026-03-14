@@ -82,7 +82,7 @@ void hexcalc(tOutput* output,thHexCalc* hHexCalc)
 			setcolor(output,(field==FIELDBIN && cursorline==i)?COLOR_INPUT:COLOR_TEXT);
 			for (j=0;j<32;j++)
 			{
-				if (x || !j)	mvwprintw(output->win,offsy+18-i,offsx+76-j,"%i",(x&1));
+				if (x || !j)	mvwprintw(output->win,offsy+18-i,offsx+76-j,"%lli",(x&1));
 				else		mvwprintw(output->win,offsy+18-i,offsx+76-j," ");
 				x>>=1;
 			}
@@ -96,7 +96,7 @@ void hexcalc(tOutput* output,thHexCalc* hHexCalc)
 		setcolor(output,(field==FIELDBIN && cursorline==-1)?COLOR_INPUT:COLOR_TEXT);
 		for (j=0;j<32;j++)
 		{
-			if (x || !j)	mvwprintw(output->win,offsy+19,offsx+76-j,"%i",(x&1));
+			if (x || !j)	mvwprintw(output->win,offsy+19,offsx+76-j,"%lli",(x&1));
 			else		mvwprintw(output->win,offsy+19,offsx+76-j," ");
 			x>>=1;
 		}

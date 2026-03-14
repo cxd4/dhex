@@ -68,7 +68,7 @@ typedef struct _tCorrelation
 {	
 	tBool		correlated;
 	corr_algorithms algorithm;
-	tInt64		start_mindiff;
+	tUInt64		start_mindiff;
 	tInt64		mindiff;
 	tInt64		mindiffpos;
 	tInt64		bestmatch;
