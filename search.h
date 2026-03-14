@@ -5,6 +5,6 @@
 #include "datatypes.h"
 
 void	clearsearch(tSearch* search);
-tInt8	searchfor(tSearch* search,tBuffer* buf,tUInt64* cursorpos,tBool nextnotprev);
+tInt8	searchfor(tSearch* search,tBuffer* buf,tInt64* cursorpos,tBool nextnotprev);
 
 #endif

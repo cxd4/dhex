@@ -11,7 +11,7 @@ void	clearsearch(tSearch* search)
 	memset(search,0,sizeof(tSearch));
 	search->forwardnotbackward=1;
 }
-tInt8	searchfor(tSearch* search,tBuffer* buf,tUInt64* cursorpos,tBool nextnotprev)
+tInt8	searchfor(tSearch* search,tBuffer* buf,tInt64* cursorpos,tBool nextnotprev)
 {
 	tInt64	actcursorpos=*cursorpos;
 	tInt64	oldcursorpos=*cursorpos;
@@ -77,10 +77,7 @@ tInt8	searchfor(tSearch* search,tBuffer* buf,tUInt64* cursorpos,tBool nextnotpre
 						// state 2: read until the end of the line
 			tUInt64	x=0;
 			tBool	havenum;
-			tInt64	firstsearchlogpos;
 
-			firstsearchlogpos=search->lastsearchlogpos;
-			
 			setfilepos(frlog,search->lastsearchlogpos);
 			havenum=0;
 			while (!done && !havenum)

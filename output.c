@@ -87,7 +87,6 @@ void printbuffersingle(tOutput* output,tBuffer* hBuf1,tInt64 cursorpos1,tUInt64 
 	int addrwidth;
 	int bytesperline;
 	tInt32 intpos1;
-	tInt32 charcnt;
 
 
 
@@ -120,13 +119,12 @@ void printbuffersingle(tOutput* output,tBuffer* hBuf1,tInt64 cursorpos1,tUInt64 
 	intpos1=getbufferidx(hBuf1,firstpos1);
 	if (intpos1>=0)
 	{
-		charcnt=0;
 		for (i=0;i<LINES-2;i++)
 		{
 			tBool colhex;
 			setcolor(output,COLOR_HEXFIELD);
-			if (addrwidth==8)	mvwprintw(output->win,i+1,0, "% 8X    ",(tUInt32)(firstpos1+hBuf1->baseaddr));
-			else			mvwprintw(output->win,i+1,0,"% 16llX    ",firstpos1+hBuf1->baseaddr);
+			if (addrwidth==8)	mvwprintw(output->win,i+1,0, "%8X    ",(tUInt32)(firstpos1+hBuf1->baseaddr));
+			else			mvwprintw(output->win,i+1,0,"%16llX    ",firstpos1+hBuf1->baseaddr);
 
 			mvwprintw(output->win,i+1,COLS-bytesperline-5,"      ");
 			wmove(output->win,i+1,addrwidth+3);
@@ -206,7 +204,6 @@ void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursor
 	tInt32 intpos1b;
 	tInt32 intpos2;
 	tInt32 intpos2b;
-	tInt32 charcnt;
 	uicolors oldcolor;
 
 
@@ -243,10 +240,10 @@ void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursor
 		mvwprintw(output->win,0,1,"[        /        ]");
 		mvwprintw(output->win,LINES/2,1,"[        /        ]");
 		setcolor(output,COLOR_TEXT);
-		mvwprintw(output->win,0,2,"%8X",(tUInt32)cursorpos1+hBuf1->baseaddr);
-		mvwprintw(output->win,0,11,"%8X",(tUInt32)hBuf1->bufsize+hBuf1->baseaddr);
-		mvwprintw(output->win,LINES/2,2,"%8X",(tUInt32)cursorpos2+hBuf2->baseaddr);
-		mvwprintw(output->win,LINES/2,11,"%8X",(tUInt32)hBuf2->bufsize+hBuf2->baseaddr);
+		mvwprintw(output->win,0,2,"%8llX",(tUInt32)cursorpos1+hBuf1->baseaddr);
+		mvwprintw(output->win,0,11,"%8llX",(tUInt32)hBuf1->bufsize+hBuf1->baseaddr);
+		mvwprintw(output->win,LINES/2,2,"%8llX",(tUInt32)cursorpos2+hBuf2->baseaddr);
+		mvwprintw(output->win,LINES/2,11,"%8llX",(tUInt32)hBuf2->bufsize+hBuf2->baseaddr);
 	}
 	setcolor(output,COLOR_HEADER);
 	mvwprintw(output->win,0,COLS-2-strlen(hBuf1->filename),"%s",hBuf1->filename);
@@ -267,15 +264,14 @@ void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursor
 	}
 	if (intpos1>=0 || intpos2>=0)
 	{
-		charcnt=0;
 		intpos1b=intpos1;
 		intpos2b=intpos2;
 
 		for (i=0;i<(LINES+1)/2-2;i++)
 		{
 			setcolor(output,COLOR_HEXFIELD);
-			if (addrwidth==8)	mvwprintw(output->win,i+1,0, "% 8X    ",(tUInt32)(cursorpos1+hBuf1->baseaddr));
-			else			mvwprintw(output->win,i+1,0,"% 16llX    ",cursorpos1+hBuf1->baseaddr);
+			if (addrwidth==8)	mvwprintw(output->win,i+1,0, "%8X    ",(tUInt32)(cursorpos1+hBuf1->baseaddr));
+			else			mvwprintw(output->win,i+1,0,"%16llX    ",cursorpos1+hBuf1->baseaddr);
 
 			mvwprintw(output->win,i+1,COLS-bytesperline-5,"      ");
 			oldcolor=COLOR_HEXFIELD;
@@ -346,8 +342,8 @@ void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursor
 		for (i=0;i<(LINES+1)/2-2;i++)
 		{
 			setcolor(output,COLOR_HEXFIELD);
-			if (addrwidth==8)	mvwprintw(output->win,i+1+LINES/2,0, "% 8X    ",(tUInt32)(cursorpos2+hBuf2->baseaddr));
-			else			mvwprintw(output->win,i+1+LINES/2,0,"% 16llX    ",cursorpos2+hBuf2->baseaddr);
+			if (addrwidth==8)	mvwprintw(output->win,i+1+LINES/2,0, "%8X    ",(tUInt32)(cursorpos2+hBuf2->baseaddr));
+			else			mvwprintw(output->win,i+1+LINES/2,0,"%16llX    ",cursorpos2+hBuf2->baseaddr);
 
 			mvwprintw(output->win,i+1+LINES/2,COLS-bytesperline-5,"      ");
 			oldcolor=COLOR_HEXFIELD;
@@ -411,7 +407,7 @@ void printmainmenu(tOutput* output,tBool diffmode)
 {
 	int i;
 	int x;
-	unsigned char* menutextsnodiff[]={
+	char* menutextsnodiff[]={
 "Goto  ",	// F1
 "Search",	// F2
 "Next  ",	// F3
@@ -423,7 +419,7 @@ void printmainmenu(tOutput* output,tBool diffmode)
 "Undo  ",	// F9
 "Quit  "};	// F10
 
-	unsigned char* menutextsdiff[]={
+	char* menutextsdiff[]={
 "      ",	// F1
 "      ",	// F2
 "Next  ",	// F3

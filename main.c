@@ -214,7 +214,6 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* baseaddr1,tInt64* basea
 				case 's':
 						{	
 							tInt8	stringtype=0;	// 0=unknown, 1=ascii, 2=hex
-							tBool	forward=1;
 							tSearch* search;
 							tBool* gosearch;
 							int j;
@@ -225,7 +224,6 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* baseaddr1,tInt64* basea
 							{
 								if (lastopt[j]=='a' || lastopt[j]=='A') stringtype=1;
 								if (lastopt[j]=='h' || lastopt[j]=='H') stringtype=2;
-								if (lastopt[j]=='b' || lastopt[j]=='B') forward=0;
 								if (lastopt[j]=='1')
 								{
 									search=search1;
