@@ -79,7 +79,7 @@ void drawcenterframe(tOutput* output,tInt8 h,tInt8 w,char* header)
 {
 	drawframe(output,LINES/2-h/2,COLS/2-w/2,h,w,header);
 }
-void printbuffersingle(tOutput* output,tBuffer* hBuf1,tInt64 cursorpos1,tUInt64 firstpos1,tUInt8 windowfield)
+void printbuffersingle(tOutput* output,tBuffer* hBuf1,tInt64 cursorpos1,tUInt64 firstpos1,tUInt8 windowfield,int dispWidth)
 {
 	int i;
 	int j;
@@ -92,7 +92,7 @@ void printbuffersingle(tOutput* output,tBuffer* hBuf1,tInt64 cursorpos1,tUInt64 
 
 
 	addrwidth=((hBuf1->bufsize+hBuf1->baseaddr)>0xffffffffull)?16:8;
-	bytesperline=(COLS-(addrwidth+3+3))*8/(8*3+8+1);			// this many bytes can be printed in one line. every 8 bytes there is an extra space in the hex field.
+	bytesperline=dispWidth?dispWidth:(COLS-(addrwidth+3+3))*8/(8*3+8+1);			// this many bytes can be printed in one line. every 8 bytes there is an extra space in the hex field.
 	
 	setcolor(output,COLOR_HEADLINE);
 	wmove(output->win,0,0);
@@ -196,7 +196,7 @@ void printbuffersingle(tOutput* output,tBuffer* hBuf1,tInt64 cursorpos1,tUInt64 
 		}
 	}
 }
-void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursorpos1,tInt64 cursorpos2)
+void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursorpos1,tInt64 cursorpos2,int dispWidth)
 {
 	int i;
 	int j;
@@ -211,7 +211,7 @@ void printbufferdiff(tOutput* output,tBuffer* hBuf1,tBuffer* hBuf2,tInt64 cursor
 
 
 	addrwidth=((hBuf1->bufsize+hBuf1->baseaddr)>0xffffffffull || (hBuf2->bufsize+hBuf2->baseaddr)>0xffffffffull)?16:8;
-	bytesperline=(COLS-(addrwidth+3+3))*8/(8*3+8+1);			// this many bytes can be printed in one line. every 8 bytes there is an extra space in the hex field.
+	bytesperline=dispWidth?dispWidth:(COLS-(addrwidth+3+3))*8/(8*3+8+1);			// this many bytes can be printed in one line. every 8 bytes there is an extra space in the hex field.
 	
 	setcolor(output,COLOR_HEADLINE);
 	wmove(output->win,0,0);
@@ -452,7 +452,7 @@ void printmainmenu(tOutput* output,tBool diffmode)
 	}
 	
 }
-tInt32 movepositions(tInt64* cursorpos,tInt64* firstpos,tInt64 maxbufsize,tInt32 chars,tInt32 lines,tInt32 pages,tBool diffmode)
+tInt32 movepositions(tInt64* cursorpos,tInt64* firstpos,tInt64 maxbufsize,tInt32 chars,tInt32 lines,tInt32 pages,tBool diffmode,int dispWidth)
 {
 	tInt32 bytesperline;
 	tInt32 bytesperhalfpage;
@@ -464,7 +464,7 @@ tInt32 movepositions(tInt64* cursorpos,tInt64* firstpos,tInt64 maxbufsize,tInt32
 	
 
 	addrwidth=(maxbufsize>0xffffffffull)?16:8;
-	bytesperline=(COLS-(addrwidth+3+3))*8/(8*3+8+1);			// this many bytes can be printed in one line. every 8 bytes there is an extra space in the hex field.
+	bytesperline=dispWidth?dispWidth:(COLS-(addrwidth+3+3))*8/(8*3+8+1);			// this many bytes can be printed in one line. every 8 bytes there is an extra space in the hex field.
 	bytesperhalfpage=bytesperline*(LINES/2-2);
 	bytesperpage=bytesperline*(LINES-2);
 	
