@@ -2,6 +2,7 @@
 #define	DATATYPES_H
 #include <ncurses.h>
 #include "machine_type.h"
+#include "config.h"
 
 /* INPUT DATATYPES */
 // this is for the special keys
@@ -19,7 +20,8 @@ typedef struct  _tKeyTab
 
 /* OUTPUT DATATYPES */
 
-typedef enum {COLOR_NONE,COLOR_BRACKETS,COLOR_INPUT,COLOR_CURSOR,COLOR_TEXT,COLOR_HEXFIELD,COLOR_DIFF,COLOR_HEADLINE,COLOR_HEADER,COLOR_MENUHOTKEY,COLOR_MENUNORMAL,COLOR_FRAME,COLOR_MENUACTIVE,COLOR_MENUHOTKEYACTIVE,COLOR_CURSORDIFF,UICOLORNUM} uicolors;
+typedef enum {COLOR_NONE,COLOR_BRACKETS,COLOR_INPUT,COLOR_CURSOR,COLOR_TEXT,COLOR_HEXFIELD,COLOR_DIFF,COLOR_HEADLINE,COLOR_HEADER,COLOR_MENUHOTKEY,COLOR_MENUNORMAL,COLOR_FRAME,COLOR_MENUACTIVE,COLOR_MENUHOTKEYACTIVE,COLOR_CURSORDIFF,COLOR_HL_RED,COLOR_HL_REDD,COLOR_HL_GREEN,COLOR_HL_GREEND,COLOR_HL_BLUE,COLOR_HL_BLUED,COLOR_HL_CYAN,COLOR_HL_CYAND,COLOR_HL_YELLOW,COLOR_HL_YELLOWD,COLOR_HL_MAGENTA,COLOR_HL_MAGENTAD,COLOR_HL_WHITE,COLOR_HL_WHITED,COLOR_HL_BLACK,COLOR_HL_BLACKD,UICOLORNUM} uicolors;
+
 typedef struct _tColors
 {
 	short	fg;
@@ -43,6 +45,18 @@ typedef	struct	_tChange
 	tUInt8	after;
 } tChange;
 
+#define	NUMHLMARKERS	20
+typedef enum {HLMARKER_POS, HLMARKER_VALUE} hlmarkertype;
+
+typedef	struct _tHighlight
+{
+	tUInt64		numA;
+	tUInt64		numB;
+	hlmarkertype	type;
+	uicolors		color;
+	uicolors		colord;
+} tHighlight;
+
 typedef struct _tBuffer
 {
 	tBool	valid;
@@ -59,6 +73,8 @@ typedef struct _tBuffer
 	tUInt8	nexthex;
 	tUInt64	changepos;
 	tInt64	baseaddr;
+	tHighlight markerhl[NUMHLMARKERS];
+	tUInt32 markerhlnum;	// number of marker
 } tBuffer;
 
 
@@ -68,7 +84,7 @@ typedef struct _tCorrelation
 {	
 	tBool		correlated;
 	corr_algorithms algorithm;
-	tInt64		start_mindiff;
+	tUInt64		start_mindiff;
 	tInt64		mindiff;
 	tInt64		mindiffpos;
 	tInt64		bestmatch;

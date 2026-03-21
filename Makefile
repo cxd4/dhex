@@ -1,45 +1,22 @@
-CC=		gcc
-LDFLAGS=	-L/usr/lib	-L/usr/local/lib  	-L/usr/lib/ncurses	-L/usr/local/lib/ncurses
-CPPFLAGS=	-I/usr/include	-I/usr/local/include	-I/usr/include/ncurses	-I/usr/local/include/ncurses
-CFLAGS=		-O3 -Wall -std=c99 
-#CFLAGS+= -ffunction-sections -fdata-sections
-#LDFLAGS+= --gc-sections 
-LIBS=		-lncurses
-DESTDIR=	/usr/local/
+SRC:=buffers.c configfile.c correlation.c gpl.c hexcalc.c input.c \
+     machine_type.c  main.c  markers.c  menu.c  output.c  search.c  ui.c \
+     hlmarkers.c
+OBJ:=$(patsubst %.c,%.o,$(SRC))
+DEP:=$(patsubst %.c,%.d,$(SRC))
+CFLAGS:=-Wall -MMD $(shell pkgconf --cflags ncurses)
+LDFLAGS:=$(shell pkgconf --libs ncurses)
+TARGET=dhex
 
-OFILES=buffers.o \
-	configfile.o \
-	correlation.o \
-	gpl.o \
-	hexcalc.o \
-	input.o \
-	machine_type.o \
-	main.o \
-	markers.o \
-	menu.o \
-	output.o \
-	search.o \
-	ui.o
+$(TARGET): $(OBJ)
+	@echo linking $(TARGET)
+	@gcc $(OBJ) $(LDFLAGS) -o $(TARGET)
 
-all:	dhex
+%.o: %.c
+	@echo compiling $<
+	@gcc $(CFLAGS) -c $< -o $@
 
-dhex:	$(OFILES)
-	$(CC) $(LDFLAGS) -o $@ $(OFILES) $(LIBS)
-
-install:all
-	strip dhex
-	cp dhex $(DESTDIR)/bin
-	cp dhex.1 $(DESTDIR)/man/man1
-	cp dhexrc.5 $(DESTDIR)/man/man5
-	cp dhex_markers.5 $(DESTDIR)/man/man5
-	cp dhex_searchlog.5 $(DESTDIR)/man/man5
-
-	
-
-.c.o:
-	$(CC) $< -c -I. $(CPPFLAGS) $(CFLAGS) $(OPTIONS)
-
+.PHONY: clean
 clean:
-	rm -f dhex $(OFILES)
+	@rm -f $(OBJ) $(DEP) $(TARGET)
 
-
+-include $(DEP)

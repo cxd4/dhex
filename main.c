@@ -17,6 +17,7 @@
 #include "search.h"
 #include "gpl.h"
 #include "markers.h"
+#include "hlmarkers.h"
 #include "correlation.h"
 
 void welcomescreen(char* argv0)
@@ -54,6 +55,8 @@ void helpscreen(char* argv0,int exitval)
 	fprintf(stderr," -g, -G                     show the license\n");
 	fprintf(stderr," -f, -F [configfile]        read the config from [configfile]\n");
 	fprintf(stderr," -m, -M [markerfile]        read the bookmarks from [markerfile]\n");
+	fprintf(stderr," -b, -B [bytes]             output [bytes] bytes per output line\n");
+	fprintf(stderr," -l, -L [highlightfile]     read the highlight markers from [highlightfile]\n");
 	fprintf(stderr,"\n");
 	fprintf(stderr,"%s [Parameters] [Filename]: Edit a single file\n",argv0);
 	fprintf(stderr," -ab, -AB [x]                 set the base address to [x] (binary)\n");
@@ -130,7 +133,7 @@ int parsecursorpos(tInt64* cursorpos1,tInt64* cursorpos2,char* lastopt,char* arg
 	return RETOK;	
 	
 }
-int parsecommandlineoptions(int argc,char** argv,tInt64* baseaddr1,tInt64* baseaddr2,tInt64* cursorpos1,tInt64* cursorpos2,tBool* diffmode,int* filename1,int* filename2,tBool* keyboardsetupreq,char* markerfilename,char* configfile,tSearch* search1,tBool* gosearch1,tSearch* search2,tBool* gosearch2,tCorrelation* correlation,tBool* gocorr)
+int parsecommandlineoptions(int argc,char** argv,tInt64* baseaddr1,tInt64* baseaddr2,tInt64* cursorpos1,tInt64* cursorpos2,tBool* diffmode,int* filename1,int* filename2,tBool* keyboardsetupreq,char* markerfilename,char* configfile,tSearch* search1,tBool* gosearch1,tSearch* search2,tBool* gosearch2,tCorrelation* correlation,tBool* gocorr,int* dispWidth,char* hlmarkerfilename)
 {
 	int filenamecnt=0;
 	int i;
@@ -214,7 +217,6 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* baseaddr1,tInt64* basea
 				case 's':
 						{	
 							tInt8	stringtype=0;	// 0=unknown, 1=ascii, 2=hex
-							tBool	forward=1;
 							tSearch* search;
 							tBool* gosearch;
 							int j;
@@ -225,7 +227,6 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* baseaddr1,tInt64* basea
 							{
 								if (lastopt[j]=='a' || lastopt[j]=='A') stringtype=1;
 								if (lastopt[j]=='h' || lastopt[j]=='H') stringtype=2;
-								if (lastopt[j]=='b' || lastopt[j]=='B') forward=0;
 								if (lastopt[j]=='1')
 								{
 									search=search1;
@@ -341,6 +342,19 @@ int parsecommandlineoptions(int argc,char** argv,tInt64* baseaddr1,tInt64* basea
 				case 'M':
 						if (markerfilename) memcpy(markerfilename,argv[i],64);
 						break;
+				case 'b':
+				case 'B':
+					*dispWidth = atoi(argv[i]);
+					if (*dispWidth < 1)
+					{
+						fprintf(stderr,"invalid bytes per output line\n");
+						retval=RETNOK;
+					}
+					break;
+				case 'l':
+				case 'L':
+					if (hlmarkerfilename) memcpy(hlmarkerfilename,argv[i],64);
+					break;
 				default:
 						retval=RETNOK;	
 						break;
@@ -374,6 +388,7 @@ int main(int argc,char** argv)
 	tOutput*	output=NULL;
 	tInt64 baseaddr1=0;
 	tInt64 cursorpos1;
+	int dispWidth=0;
 	tInt64 firstpos1;
 	tInt64 baseaddr2=0;
 	tInt64 cursorpos2;
@@ -389,6 +404,7 @@ int main(int argc,char** argv)
 	tBool	gosearch2=0;
 	tCorrelation correlation;
 	char	markerfilename[64];
+	char	hlmarkerfilename[64];
 	
 	tUInt8	windowfield=0;	// 0=hex field buffer 1, 1=ascii field buffer 1, 2=hex field buffer 2, 3=ascii field buffer 2
 	tBool	diffmode=0;
@@ -404,6 +420,7 @@ int main(int argc,char** argv)
 
 	memset(configfile,0,512);
 	memset(markerfilename,0,64);
+	memset(hlmarkerfilename,0,64);
 	markers=initmarkers();
 	output=malloc(sizeof(tOutput));
 	memset(output,0,sizeof(tOutput));
@@ -416,7 +433,7 @@ int main(int argc,char** argv)
 	clearsearch(&search1);
 	clearsearch(&search2);
 	clear_correlation(&correlation);
-	if (parsecommandlineoptions(argc,argv,&baseaddr1,&baseaddr2,&cursorpos1,&cursorpos2,&diffmode,&filename1,&filename2,&keyboardsetupreq,markerfilename,configfile,&search1,&gosearch1,&search2,&gosearch2,&correlation,&gocorr)!=RETOK)
+	if (parsecommandlineoptions(argc,argv,&baseaddr1,&baseaddr2,&cursorpos1,&cursorpos2,&diffmode,&filename1,&filename2,&keyboardsetupreq,markerfilename,configfile,&search1,&gosearch1,&search2,&gosearch2,&correlation,&gocorr,&dispWidth,hlmarkerfilename)!=RETOK)
 	{
 		if (output)
 		{
@@ -513,6 +530,11 @@ int main(int argc,char** argv)
 		fprintf(stderr,"error opening second inputfile %s\n",argv[filename2]);
 		exit(1);
 	}
+	if (hlmarkerfilename[0] &&
+		parsehlmarkerfile(buf1->markerhl,&buf1->markerhlnum,hlmarkerfilename)!=RETOK)
+	{
+		exit(1);
+	}
 	if (gosearch1) searchfor(&search1,buf1,&cursorpos1,1);
 	if (gosearch2 && diffmode) searchfor(&search2,buf2,&cursorpos2,1);
 	if (gocorr && diffmode)	
@@ -535,9 +557,9 @@ int main(int argc,char** argv)
 		{	
 			printmainmenu(output,diffmode);
 			if (diffmode)
-				printbufferdiff(output,buf1,buf2,cursorpos1,cursorpos2);
+				printbufferdiff(output,buf1,buf2,cursorpos1,cursorpos2,dispWidth);
 			else		
-				printbuffersingle(output,buf1,cursorpos1,firstpos1,windowfield);
+				printbuffersingle(output,buf1,cursorpos1,firstpos1,windowfield,dispWidth);
 			ch=getkey((tKeyTab*)output->pKeyTab,1);
 
 #define	MOVEMENTDEFINE(KEY,VIKEY,mvchar,mvline,mvpage)	\
@@ -549,11 +571,11 @@ int main(int argc,char** argv)
 				oldfirstpos2=firstpos2;	\
 				oldcursorpos2=cursorpos2;	\
 				\
-				err=movepositions(&cursorpos1,&firstpos1,buf1->bufsize,mvchar,mvline,mvpage,diffmode);	\
+				err=movepositions(&cursorpos1,&firstpos1,buf1->bufsize,mvchar,mvline,mvpage,diffmode,dispWidth); \
 				\
 				if (diffmode)	\
 				{	\
-					movepositions(&cursorpos2,&firstpos2,buf2->bufsize,mvchar,mvline,mvpage,diffmode);	\
+					movepositions(&cursorpos2,&firstpos2,buf2->bufsize,mvchar,mvline,mvpage,diffmode,dispWidth); \
 					err=((cursorpos1<0 && cursorpos2<0) || (cursorpos1>buf1->bufsize && cursorpos2>buf2->bufsize)); \
 				}	\
 				if (err)	\
@@ -718,7 +740,7 @@ int main(int argc,char** argv)
 						buf1->changes[buf1->changesnum].pos=cursorpos1;
 						buf1->changes[buf1->changesnum].after=buf1->nexthex;
 						buf1->changesnum++;
-						movepositions(&cursorpos1,&firstpos1,buf1->bufsize,1,0,0,diffmode);
+						movepositions(&cursorpos1,&firstpos1,buf1->bufsize,1,0,0,diffmode,dispWidth);
 					}
 					buf1->nibble=!buf1->nibble;
 					buf1->changepos=cursorpos1;
@@ -729,7 +751,7 @@ int main(int argc,char** argv)
 					buf1->changes[buf1->changesnum].pos=cursorpos1;
 					buf1->changes[buf1->changesnum].after=ch;
 					buf1->changesnum++;
-					movepositions(&cursorpos1,&firstpos1,buf1->bufsize,1,0,0,diffmode);
+					movepositions(&cursorpos1,&firstpos1,buf1->bufsize,1,0,0,diffmode,dispWidth);
 				}
 			}
 			if (ch==KEYF10)

@@ -171,7 +171,7 @@ int getcolors(tOutput* output,char* line)
 int readconfigfile(tOutput* output,char* filename)
 {
 	tFptr f=fopen(filename,"rb");
-	unsigned char line[512];
+	char line[512];
 	unsigned char c;
 	int lineidx=0;
 	int	keyboardcnt;
