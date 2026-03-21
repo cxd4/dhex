@@ -1,5 +1,6 @@
 SRC:=buffers.c configfile.c correlation.c gpl.c hexcalc.c input.c \
-     machine_type.c  main.c  markers.c  menu.c  output.c  search.c  ui.c
+     machine_type.c  main.c  markers.c  menu.c  output.c  search.c  ui.c \
+     hlmarkers.c
 OBJ:=$(patsubst %.c,%.o,$(SRC))
 DEP:=$(patsubst %.c,%.d,$(SRC))
 CFLAGS:=-Wall -MMD $(shell pkgconf --cflags ncurses)

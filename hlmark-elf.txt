@@ -1,0 +1,24 @@
+# ELF header (64 bit)
+#
+# https://en.wikipedia.org/wiki/Executable_and_Linkable_Format#ELF_header
+
+red     @ 0x0000-0x0003 # e_ident[EI_MAG0] - e_ident[EI_MAG3]
+green   @ 0x0004        # e_ident[EI_CLASS]
+blue    @ 0x0005        # e_ident[EI_DATA]
+cyan    @ 0x0006        # e_ident[EI_VERSION]
+yellow  @ 0x0007        # e_ident[EI_OSABI]
+magenta @ 0x0008        # e_ident[EI_ABIVERSION]
+white   @ 0x0009-0x000f # e_ident[EI_PAD]
+black   @ 0x0010-0x0011 # e_type
+red     @ 0x0012-0x0013 # e_machine
+green   @ 0x0014-0x0017 # e_version
+blue    @ 0x0018-0x001f # e_entry
+cyan    @ 0x0020-0x0027 # e_phoff
+yellow  @ 0x0028-0x002f # e_shoff
+magenta @ 0x0030-0x0033 # e_flags
+white   @ 0x0034-0x0035 # e_ehsize
+black   @ 0x0036-0x0037 # e_phentsize
+red     @ 0x0038-0x0039 # e_phnum
+green   @ 0x003a-0x003b # e_shentsize
+blue    @ 0x003c-0x003d # e_shnum
+cyan    @ 0x003e-0x003f # e_shstrndx
