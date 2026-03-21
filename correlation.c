@@ -27,7 +27,7 @@ void find_longestmatch(tOutput* output,tCorrelation* correlation,tBuffer* buf1,t
 		mvwprintw(output->win,offsy+1,offsx+1,"pos1:");
 		mvwprintw(output->win,offsy+4,offsx+1,"longest match:");
 		mvwprintw(output->win,offsy+5,offsx+1,"at");
-		if (smallwin) mvwprintw(smallwin,4,1,"%18lli",0);
+		if (smallwin) mvwprintw(smallwin,4,1,"%18i",0);
 		wrefresh(output->win);
 	}
 	
@@ -115,7 +115,7 @@ void find_bestmatch(tOutput* output,tCorrelation* correlation,tBuffer* buf1,tBuf
 		mvwprintw(output->win,offsy+1,offsx+1,"pos1:");
 		mvwprintw(output->win,offsy+4,offsx+1,"best match:");
 		mvwprintw(output->win,offsy+5,offsx+1,"at");
-		if (smallwin) mvwprintw(smallwin,4,1,"%18lli",0);
+		if (smallwin) mvwprintw(smallwin,4,1,"%18i",0);
 		wrefresh(output->win);
 	}
 	
@@ -178,7 +178,6 @@ void find_mindiff(tOutput* output,tCorrelation* correlation,tBuffer* buf1,tBuffe
 	WINDOW* smallwin=NULL;
 	tBuffer* smallbuf;
 	tBuffer* bigbuf;
-	tInt64	match;
 	tBool	found=0;
 
 	
@@ -207,7 +206,6 @@ void find_mindiff(tOutput* output,tCorrelation* correlation,tBuffer* buf1,tBuffe
 	for (pos1=-(tInt64)smallbuf->bufsize;pos1<(tInt64)bigbuf->bufsize && correlation->mindiff;pos1++)
 	{
 		diff=0;
-		match=0;
 		if (smallwin) mvwprintw(smallwin,1,3,"%16lli",((tInt64)bigbuf->bufsize-pos1));
 		else fprintf(stderr,"%16lli\r",((tInt64)buf1->bufsize-pos1));
 
